@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUIProfiles>
+    <Presets>
+        <Preset name="colorMainUI" value="0.0227 0.5346 0.8519 1.0"/>
+        <Preset name="colorWhite" value="1 1 1 1"/>
+        <Preset name="colorGrayHeader" value="0.4 0.4 0.4 1"/>
+        <Preset name="colorListHeaderBackground" value="0 0 0 0.35" />
+    </Presets>
+    <Profile name="garageMenuHeaderIcon" extends="baseReference" with="anchorMiddleCenter">
+        <imageSliceId value="gui.icon_ingameMenu_contracts" />
+        <imageColor value="$preset_fs25_colorMainDark" />
+    </Profile>
+</GUIProfiles>

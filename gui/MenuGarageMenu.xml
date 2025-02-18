@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI name="menuGarageMenu">
+    <GuiElement profile="fs25_menuContainer">
+        <GuiElement profile="fs25_menuHeaderPanel">
+			<Bitmap profile="fs25_menuHeaderIconBg">
+				<Bitmap profile="garageMenuHeaderIcon" size="50px 50px"/>
+            </Bitmap>
+			<Text profile="fs25_menuHeaderTitle" id="categoryHeaderText" text="$l10n_ui_GarageMenu"/>
+		</GuiElement>  
+    </GuiElement>
+</GUI>

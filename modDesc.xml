@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="94">
+    <author>Ozz</author>
+    <version>1.0.0.0</version>
+    <iconFilename>icon_garageMenu.dds</iconFilename>
+    <title>
+        <en>Garage Menu</en>
+        <de>Garage Menu</de>
+        <fr>Garage Menu</fr>
+    </title>
+    <description>
+            <en><![CDATA[Garage Menu
+
+TODO
+
+]]></en>		
+    <de><![CDATA[Garage Menu
+
+TODO
+
+]]></de>	
+    <fr><![CDATA[Garage Menu
+
+TODO
+
+]]></fr>	
+    </description>
+	<extraSourceFiles>
+        <sourceFile filename="main.lua"/>
+    </extraSourceFiles>
+    <multiplayer supported="true"/>
+    <l10n filenamePrefix="languages/l10n" />
+</modDesc>
