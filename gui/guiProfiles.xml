@@ -7,7 +7,20 @@
         <Preset name="colorListHeaderBackground" value="0 0 0 0.35" />
     </Presets>
     <Profile name="garageMenuHeaderIcon" extends="baseReference" with="anchorMiddleCenter">
-        <imageSliceId value="gui.icon_ingameMenu_contracts" />
+        <imageSliceId value="gui.icon_vehicleDealer_machines" />
         <imageColor value="$preset_fs25_colorMainDark" />
+    </Profile>
+    <Profile name="garageMenu_shopItemsListItem" extends="emptyPanel" with="anchorTopLeft">
+        <size value="275px 250px"/>
+    </Profile>
+    <Profile name="garageMenu_shopItemsListItemImage" extends="baseReference" with="anchorTopCenter">
+        <size value="200px 200px"/>
+        <position value="0px 60px"/>
+        <imageUVs value="0 0 1 1"/>
+        <imageSliceId value="noSlice"/>
+        <selectedOffset value="0px 15px"/>
+        <Variant name="mobile">
+            <position value="0px 40px"/>
+        </Variant>
     </Profile>
 </GUIProfiles>
