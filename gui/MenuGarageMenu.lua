@@ -1,9 +1,7 @@
 MenuGarageMenu = {}
-MenuGarageMenu.currentTasks = {}
 MenuGarageMenu._mt = Class(MenuGarageMenu, TabbedMenuFrameElement)
 
 function MenuGarageMenu.new(i18n, messageCenter)
-    print("MenuGarageMenu.new")
     local self = MenuGarageMenu:superClass().new(nil, MenuGarageMenu._mt)
     self.name = "menuGarageMenu"
     self.i18n = i18n
@@ -40,11 +38,11 @@ function MenuGarageMenu:setCategoryData()
 
         for _, category in pairs(entries) do
             self.categoryData[category.id] = {
-                sectionID     = sectionID,
-                iconFilename  = category.iconFilename,
-                label         = category.label,
+                sectionID    = sectionID,
+                iconFilename = category.iconFilename,
+                label        = category.label,
                 -- categoryIndex = k,
-                sortValue     = category.sortValue,
+                sortValue    = category.sortValue,
                 -- categoryIndex    = categoryIndex
             }
             -- nextIndex = nextIndex + 1
@@ -188,6 +186,18 @@ function MenuGarageMenu:populateCellForItemInSection(list, section, index, cell)
     -- cell:getAttribute("value"):setText(category.label)
     -- cell:getAttribute("section"):setText(self.renderData[section].name)
     -- cell:getAttribute("brandIcon"):setText(category.iconFilename) -- TODO copy get from raw from reference
+end
+
+function MenuGarageMenu:onOpenCategory(list, sectionIndex, index, element)
+    local section = self.renderData[sectionIndex]
+    if section ~= nil and section.categories[index] ~= nil then
+        DebugUtil.printTableRecursively(section.categories[index])
+        g_shopMenu.pagingElement:setPage(1)
+        -- local frame = g_gui:showDialog("itemsFrame")
+        -- if frame ~= nil then
+        --     print("frame is not nil")
+        -- end
+    end
 end
 
 -- function MenuGarageMenu:onListSelectionChanged(list, section, index)

@@ -14,20 +14,198 @@ GarageMenu = {}
 GarageMenu.dir = g_currentModDirectory
 GarageMenu.modName = g_currentModName
 
+source(GarageMenu.dir .. "GarageMenuUtils.lua")
 source(GarageMenu.dir .. "gui/MenuGarageMenu.lua")
+-- source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 
 function GarageMenu:loadMap()
-
     g_gui:loadProfiles(GarageMenu.dir .. "gui/guiProfiles.xml")
 
-    local guiGarageMenu = MenuGarageMenu.new(g_i18n)
-    g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "menuGarageMenu", guiGarageMenu, true)
+    -- local guiGarageMenu = MenuGarageMenu.new(g_i18n)
+    -- -- g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "menuGarageMenu", guiGarageMenu, true)
+    -- g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "menuGarageMenu", guiGarageMenu, true)
 
-    GarageMenu.fixInGameMenu(guiGarageMenu, "menuGarageMenu", { 0, 0, 1024, 1024 }, 2,
+    -- local guiItemsFrame = ItemsFrame.new(g_i18n)
+    -- g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "itemsFrame", guiItemsFrame)
+
+    -- GarageMenu.fixInGameMenu(guiGarageMenu, "menuGarageMenu", { 0, 0, 1024, 1024 }, 2,
+    --     GarageMenu:makeIsGarageMenuCheckEnabledPredicate())
+
+    -- local shopClone = g_shopMenu.pageShopVehicles:clone(g_shopMenu)
+    self.itemCache = {}
+    self.categoryData = nil
+    -- self.moneyBoxRemoved = false
+    self.garagePage = ShopCategoriesFrame:new()
+    local pageName = "garageFrame"
+    g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", pageName, self.garagePage, true)
+    -- g_shopMenu.pagingGarage = garagePage
+    -- g_shopMenu.pagingElement:addElement(garagePage)
+    -- g_shopMenu:exposeControlsAsFields(pageName)
+    -- g_shopMenu.pagingElement:updateAbsolutePosition()
+    -- g_shopMenu.pagingElement:updatePageMapping()
+
+    self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
+
+    GarageMenu.fixInGameMenu(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 }, 2,
         GarageMenu:makeIsGarageMenuCheckEnabledPredicate())
 
+    -- TODO - find the money box and remove the elements
+    g_currentMission.garageMenu = self
+    self:removeMoneyBox()
 
-    guiGarageMenu:initialize()
+    -- guiGarageMenu:initialize()
+end
+
+function GarageMenu.onFrameOpen()
+    local self = g_currentMission.garageMenu
+
+    -- if not self.moneyBoxRemoved then
+    --     self:removeMoneyBox()
+    --     self.moneyBoxRemoved = true
+    -- end
+
+    local categoryTypes = g_storeManager:getCategoryTypes()
+    local shopCategories = g_shopController:getShopCategories()
+    local ownedItemCategories = self:getOwnedItemCategories()
+    local displayCategories = {}
+
+    for k, category in pairs(shopCategories) do
+        if ownedItemCategories[k] ~= nil then
+            local itemCategories = {}
+            for _, itemCategory in pairs(category) do
+                if ownedItemCategories[k][itemCategory.id] ~= nil then
+                    table.insert(itemCategories, itemCategory)
+                end
+            end
+            displayCategories[k] = itemCategories
+        end
+    end
+
+    local config = {
+        categoryTypes,
+        displayCategories,
+        -- g_currentMission.garageMenu:makeSelfCallback(GarageMenu.onClickItemCategory),
+        GarageMenu.onClickItemCategory,
+        g_shopMenu:makeSelfCallback(g_shopMenu.onSelectCategory),
+        g_i18n:getText("garage_menu_header"),
+        ShopMenu.SLICE_ID.VEHICLES,
+        ShopMenu.LIST_CELL_NAME_CATEGORY,
+        ShopMenu.LIST_EMPTY_CELL_NAME_CATEGORY
+    }
+
+    self.garagePage:reset()
+    self.garagePage:initialize(unpack(config))
+    self.garagePage.categoryList:reloadData()
+end
+
+function GarageMenu:removeMoneyBox()
+    local headerPanel = self.garagePage.elements[1].elements[1].elements[1]
+    local toRemove = {
+        shopMoneyBoxBg = 1,
+        shopMoneyBox = 1
+    }
+    -- for i, e in headerPanel.elements do
+    --     if toRemove[e.id] ~= nil then
+    --         for j, v in pairs(e.elements) do
+    --             table.remove(e.elements, j)
+    --         end
+    --         table.remove(headerPanel.elements, i)
+    --     end
+    -- end
+
+    for i = #headerPanel.elements, 1, -1 do
+        local e = headerPanel.elements[i]
+        if toRemove[e.id] ~= nil then
+            table.remove(headerPanel.elements, i)
+        end
+    end
+end
+
+function GarageMenu:getOwnedItemCategories()
+    -- local self = g_currentMission.garageMenu
+    local ownedItemCategories = {}
+    local currentFarmId = 1
+
+    if self.categoryData == nil then
+        self:setCategoryData()
+    end
+
+    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
+        if vehicle.ownerFarmId == currentFarmId then
+            local xmlFileName = vehicle.xmlFile.filename
+            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+
+            local itemCategoryName = self.itemCache[xmlFileName].categoryName
+            local categoryTypeID = self.categoryData[itemCategoryName].sectionID
+
+            if categoryTypeID ~= "OBJECTS" then
+                if ownedItemCategories[categoryTypeID] == nil then ownedItemCategories[categoryTypeID] = {} end
+                ownedItemCategories[categoryTypeID][itemCategoryName] = 1
+            end
+        end
+    end
+
+    return ownedItemCategories
+end
+
+function GarageMenu:setCategoryData()
+    local inGameMenu = g_gui.screenControllers[ShopMenu]
+    self.categoryData = {}
+    for sectionID, entries in pairs(inGameMenu.pageShopVehicles.categories) do
+        for _, category in pairs(entries) do
+            self.categoryData[category.id] = {
+                sectionID = sectionID
+            }
+        end
+    end
+end
+
+function GarageMenu:storeItemDetails(itemXml)
+    self.itemCache[itemXml] = {}
+    for index, item in pairs(g_storeManager.items) do
+        if item ~= nil then
+            if item.xmlFilename == itemXml then
+                self.itemCache[itemXml].categoryName = item.categoryName
+                self.itemCache[itemXml].itemName = item.name
+                self.itemCache[itemXml].brandNameRaw = item.brandNameRaw
+                break
+            end
+        end
+    end
+end
+
+-- function GarageMenu:makeSelfCallback(func)
+--     return function(...)
+--         return func(self, g_shopMenu, ...)
+--     end
+-- end
+
+function GarageMenu.onClickItemCategory(categoryName, screenTitle, categoryDisplayName, baseCategoryIconUVs)
+    local categoryItems = g_shopController:getItemsByCategory(categoryName)
+    local currentDisplayItems = categoryItems
+
+    -- if self.state ~= 0 then
+    local displayItems = {}
+
+    for i = 1, #categoryItems do
+        -- if self:getIsItemVisible(categoryItems[i].storeItem) then
+        table.insert(displayItems, categoryItems[i])
+        -- end
+    end
+
+    currentDisplayItems = displayItems
+    -- end
+
+    g_shopMenu.currentCategoryName = categoryName
+    g_shopMenu.currentDisplayItems = currentDisplayItems
+    g_shopMenu.currentCategoryFilter = nil
+    g_shopMenu.currentItemDetailsType = ShopMenu.DETAILS.VEHICLE
+    g_shopMenu.pageShopItemDetails:setDisplayItems(currentDisplayItems)
+    --     g_shopMenu:updateSubPageSelector()
+
+    g_shopMenu.pageShopItemDetails:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryDisplayName)
+    g_shopMenu:pushDetail(g_shopMenu.pageShopItemDetails)
+    --     g_shopMenu:updateSubPageSelector()
 end
 
 function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()
@@ -99,3 +277,5 @@ function GarageMenu.fixInGameMenu(frame, pageName, uvs, position, predicateFunc)
 end
 
 addModEventListener(GarageMenu)
+-- g_shopMenu["onFrameOpen"] = Utils.appendedFunction(target[name], newFunc)
+-- Utility.appendedFunction(InGameMenuContractsFrame, "onFrameOpen", onFrameOpen)

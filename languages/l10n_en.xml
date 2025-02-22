@@ -2,6 +2,6 @@
 <l10n>
     <translationContributors/>
 	<texts>
-        <text name="ui_GarageMenu" text="Garage Menu"/>
+        <text name="garage_menu_header" text="MY GARAGE"/>
 	</texts>
 </l10n>
