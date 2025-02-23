@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI name="shopItems">
+    <GuiElement profile="fs25_shopContainer">
+        <GuiElement profile="fs25_shopHeaderPanel">
+            <Bitmap profile="fs25_menuHeaderIconBg">
+                <Bitmap profile="fs25_menuHeaderIcon" id="itemsHeaderIcon"/>
+            </Bitmap>
+            <Text profile="fs25_menuHeaderTitle" id="itemsHeaderText"/>
+        </GuiElement>        
+        <GuiElement profile="fs25_shopItemsListContainer">
+            <SmoothList profile="fs25_shopItemsList" id="itemsList" onDoubleClick="showSellSelected" startClipperElementName="startClipper" listSectionHeader="section">
+                <ListItem profile="fs25_shopItemsListItem">
+                    <Bitmap profile="fs25_shopItemsListItemBackground"/>
+                    <Bitmap profile="fs25_shopItemsListItemSeparator"/>
+                    <Bitmap profile="fs25_shopItemsListItemImage" name="icon"/>
+                    <Bitmap profile="fs25_shopItemsListItemBrandImage" name="brandIcon"/>
+                    <!-- <ThreePartBitmap profile="fs25_shopItemsListItemPriceTag" name="priceTag" visible="false">
+                        <Text profile="fs25_shopItemsListItemPriceTagText" name="priceTagText" text="0.99€"/>
+                    </ThreePartBitmap> -->
+                    <Text profile="fs25_shopItemsListItemTitleText" name="title"/>
+                    <Text profile="fs25_shopItemsListItemValueText" name="value"/>
+                    <!-- <Text profile="fs25_shopItemsListItemModDlcText" name="modDlc"/> -->
+                </ListItem>
+                <ListItem profile="fs25_shopItemsListSection" name="section"/>
+                <ListItem profile="fs25_shopItemsListItem" name="empty">
+                    <Bitmap profile="fs25_shopItemsListItemBackgroundEmpty"/>
+                </ListItem>
+            </SmoothList>
+            <Bitmap profile="fs25_startClipper" name="startClipper" position="-2px 0px"/>
+            <Bitmap profile="fs25_stopClipper" name="stopClipper" position="-2px 0px"/>
+        </GuiElement>
+        <GuiElement profile="fs25_shopItemsDetailsContainer" id="detailBox">
+                <Bitmap profile="fs25_stopClipper" name="startClipper" position="-2px 215px"/>
+                <Bitmap profile="fs25_vehiclesDetailsImageBg">
+                    <Bitmap profile="fs25_vehiclesDetailsImage" id="itemDetailsImage"/>
+                </Bitmap>
+                <InGameMapPreview profile="fs25_vehiclesIngameMap" id="itemDetailsMap"/>
+                <Text profile="fs25_vehiclesDetailsName" id="itemDetailsName"/>
+                <Bitmap profile="fs25_itemDetailsFruitIcon" id="fruitIconTemplate" visible="false"/>
+                <BoxLayout profile="fs25_vehiclesDetailsInfoBox" id="attributesLayout">
+                    <GuiElement profile="fs25_itemDetailsTemplateBox" name="detailTemplate">
+                        <Bitmap profile="fs25_itemDetailsIcon" name="icon"/>
+                        <Text profile="fs25_itemDetailsText" text="Default" name="text"/>
+                    </GuiElement>
+                    <GuiElement profile="fs25_itemDetailsTemplateBox" name="valueTemplate">
+                        <Bitmap profile="shopListAttributeIconPrice" name="icon"/>
+                        <Text profile="fs25_itemDetailsText" text="Dummy" name="text"/>
+                    </GuiElement>
+                    <GuiElement profile="fs25_itemDetailsFillTypeTemplateBox" name="fillTypesTemplate">
+                        <Bitmap profile="fs25_itemDetailsFillTypeSeparator"/>
+                        <Bitmap profile="fs25_itemDetailsIcon" name="icon"/>
+                        <GuiElement profile="fs25_itemDetailsIconsLayoutBox">
+                            <BoxLayout profile="fs25_itemDetailsIconsLayout" name="iconsLayout"/>
+                        </GuiElement>
+                    </GuiElement>
+                </BoxLayout>
+            </GuiElement>
+    </GuiElement>
+    <ThreePartBitmap profile="fs25_sliderDockedBg">
+        <ThreePartBitmap profile="fs25_sliderDockedBox">
+            <Slider profile="fs25_sliderDocked" dataElementId="itemsList"/>
+        </ThreePartBitmap>
+    </ThreePartBitmap>
+</GUI>

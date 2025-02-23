@@ -15,27 +15,37 @@ GarageMenu.dir = g_currentModDirectory
 GarageMenu.modName = g_currentModName
 
 source(GarageMenu.dir .. "gui/MenuGarageMenu.lua")
+source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 
 function GarageMenu:loadMap()
     g_gui:loadProfiles(GarageMenu.dir .. "gui/guiProfiles.xml")
 
     self.itemCache = {}
+    self.brandCache = {}
     self.categoryData = nil
+
     self.garagePage = ShopCategoriesFrame:new()
-    local pageName = "garageFrame"
-    g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", pageName, self.garagePage, true)
+    g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "garageFrame", self.garagePage, true)
 
     self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
-    self:removeMoneyBox()
+    self:configureGaragePage()
 
-    GarageMenu.fixInGameMenu(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 }, 2,
-        GarageMenu:makeIsGarageMenuCheckEnabledPredicate())
+    self.garageItemsPage = ItemsFrame.new()
+    g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "menuTaskList", self.garageItemsPage, true)    
+    g_shopMenu.pagingElement:addElement(self.garageItemsPage)
+
+    GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
+        GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), true, "pageUsedSale")
 
     g_currentMission.garageMenu = self
 end
 
 function GarageMenu.onFrameOpen()
     local self = g_currentMission.garageMenu
+
+    local frameXml = "dataS/gui/InGameMenuStatisticsFrame.xml"
+    local xmlFile = loadXMLFile("Temp", frameXml)
+    saveXMLFileTo(xmlFile, g_currentMission.missionInfo.savegameDirectory .. "/InGameMenuStatisticsFrame.xml")
 
     local categoryTypes = g_storeManager:getCategoryTypes()
     local shopCategories = g_shopController:getShopCategories()
@@ -69,9 +79,10 @@ function GarageMenu.onFrameOpen()
     self.garagePage:reset()
     self.garagePage:initialize(unpack(config))
     self.garagePage.categoryList:reloadData()
+    self.garagePage:updatePagingButtons()
 end
 
-function GarageMenu:removeMoneyBox()
+function GarageMenu:configureGaragePage()
     local headerPanel = self.garagePage.elements[1].elements[1].elements[1]
     local toRemove = {
         shopMoneyBoxBg = 1,
@@ -129,39 +140,97 @@ function GarageMenu:storeItemDetails(itemXml)
     for index, item in pairs(g_storeManager.items) do
         if item ~= nil then
             if item.xmlFilename == itemXml then
+                self.itemCache[itemXml].brand = self:getBrandFromRawName(item.brandNameRaw)
                 self.itemCache[itemXml].categoryName = item.categoryName
                 self.itemCache[itemXml].itemName = item.name
-                self.itemCache[itemXml].brandNameRaw = item.brandNameRaw
+                self.itemCache[itemXml].canBeSold = item.canBeSold
+                self.itemCache[itemXml].id = item.id
+                self.itemCache[itemXml].imageFilename = item.imageFilename
                 break
             end
         end
     end
 end
 
+function GarageMenu:getBrandFromRawName(rawName)
+    if self.brandCache[rawName] ~= nil then
+        return self.brandCache[rawName]
+    end
+
+    for brandIndex, brandItem in pairs(g_brandManager.indexToBrand) do
+        if brandItem ~= nil then
+            if brandItem.name == rawName then
+                self.brandCache[rawName] = brandItem -- image, imageOffset, name, title (friendly)
+                return self.brandCache[rawName]
+            end
+        else
+            break
+        end
+    end
+end
+
+function GarageMenu:getCurrentFarmId()
+    local currentFarmId = -1
+    local farm = g_farmManager:getFarmByUserId(g_currentMission.playerUserId)
+    if farm ~= nil then
+        return farm.farmId
+    end
+    return currentFarmId -- Not sure can happen!
+end
+
 function GarageMenu.onClickItemCategory(categoryName, screenTitle, categoryDisplayName, baseCategoryIconUVs)
+    local self = g_currentMission.garageMenu
     local categoryItems = g_shopController:getItemsByCategory(categoryName)
     local currentDisplayItems = categoryItems
 
     -- if self.state ~= 0 then
     local displayItems = {}
+    local currentFarmId = self:getCurrentFarmId()
+    local owned = g_currentMission.vehicleSystem.vehicles
+    for _, item in owned do
+        if item.ownerFarmId == currentFarmId then
+            local xmlFileName = item.xmlFile.filename
+            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
-    for i = 1, #categoryItems do
-        -- if self:getIsItemVisible(categoryItems[i].storeItem) then
-        table.insert(displayItems, categoryItems[i])
-        -- end
+            local itemCacheEntry = self.itemCache[xmlFileName]
+            local itemCategoryName = self.itemCache[xmlFileName].categoryName
+
+            -- local mapEntry = self.categoryData[itemCacheEntry.categoryName]
+            if itemCategoryName == categoryName then
+                table.insert(displayItems, {
+                    xmlFileName = xmlFileName,
+                    id = item.id,
+                    brand = item.brand,
+                    price = item.price -- might be base price
+                })
+            end
+        end
     end
+    -- for i = 1, #categoryItems do
+    --     -- if self:getIsItemVisible(categoryItems[i].storeItem) then
+    --     table.insert(displayItems, categoryItems[i])
+    --     -- end
+    -- end
 
     currentDisplayItems = displayItems
     -- end
 
     g_shopMenu.currentCategoryName = categoryName
     g_shopMenu.currentDisplayItems = currentDisplayItems
-    g_shopMenu.currentCategoryFilter = nil
+    g_shopMenu.currentCategoryFilter = ShopMenu.FILTER.OWNED
     g_shopMenu.currentItemDetailsType = ShopMenu.DETAILS.VEHICLE
-    g_shopMenu.pageShopItemDetails:setDisplayItems(currentDisplayItems)
+    -- g_shopMenu.pageShopItemDetails:setDisplayItems(currentDisplayItems)
 
-    g_shopMenu.pageShopItemDetails:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryDisplayName)
-    g_shopMenu:pushDetail(g_shopMenu.pageShopItemDetails)
+    -- g_shopMenu.pageShopItemDetails:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryDisplayName)
+    -- g_shopMenu:pushDetail(g_shopMenu.pageShopItemDetails)
+
+    self.garageItemsPage:setDisplayItems(currentDisplayItems)
+
+    self.garageItemsPage:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryName)
+    g_shopMenu:pushDetail(self.garageItemsPage)
+    -- g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(self.garageItemsPage))
+    -- local targetIndex = g_shopMenu.pagingElement:getPageMappingIndexByElement(self.garageItemsPage)
+    -- g_shopMenu:onPageChange(targetIndex)
 end
 
 function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()
@@ -169,67 +238,66 @@ function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()
 end
 
 -- from Courseplay
-function GarageMenu.fixInGameMenu(frame, pageName, uvs, position, predicateFunc)
-    local inGameMenu = g_gui.screenControllers[ShopMenu]
+function GarageMenu.addShopPage(frame, pageName, uvs, predicateFunc, addTab, insertAfter)
+    -- local inGameMenu = g_shopMenu
     local targetPosition = 0
 
     -- remove all to avoid warnings
     for k, v in pairs({ pageName }) do
-        inGameMenu.controlIDs[v] = nil
+        g_shopMenu.controlIDs[v] = nil
     end
 
-    for i = 1, #inGameMenu.pagingElement.elements do
-        local child = inGameMenu.pagingElement.elements[i]
-        if child == inGameMenu["pageUsedSale"] then
+    for i = 1, #g_shopMenu.pagingElement.elements do
+        local child = g_shopMenu.pagingElement.elements[i]
+        if child == g_shopMenu[insertAfter] then
             targetPosition = i + 1;
             break
         end
     end
 
-    if targetPosition == 0 then
-        targetPosition = position
-    end
+    g_shopMenu[pageName] = frame
+    g_shopMenu.pagingElement:addElement(g_shopMenu[pageName])
 
-    inGameMenu[pageName] = frame
-    inGameMenu.pagingElement:addElement(inGameMenu[pageName])
+    g_shopMenu:exposeControlsAsFields(pageName)
 
-    inGameMenu:exposeControlsAsFields(pageName)
-
-    for i = 1, #inGameMenu.pagingElement.elements do
-        local child = inGameMenu.pagingElement.elements[i]
-        if child == inGameMenu[pageName] then
-            table.remove(inGameMenu.pagingElement.elements, i)
-            table.insert(inGameMenu.pagingElement.elements, targetPosition, child)
+    for i = 1, #g_shopMenu.pagingElement.elements do
+        local child = g_shopMenu.pagingElement.elements[i]
+        if child == g_shopMenu[pageName] then
+            table.remove(g_shopMenu.pagingElement.elements, i)
+            table.insert(g_shopMenu.pagingElement.elements, targetPosition, child)
             break
         end
     end
 
-    for i = 1, #inGameMenu.pagingElement.pages do
-        local child = inGameMenu.pagingElement.pages[i]
-        if child.element == inGameMenu[pageName] then
-            table.remove(inGameMenu.pagingElement.pages, i)
-            table.insert(inGameMenu.pagingElement.pages, targetPosition, child)
+    for i = 1, #g_shopMenu.pagingElement.pages do
+        local child = g_shopMenu.pagingElement.pages[i]
+        if child.element == g_shopMenu[pageName] then
+            table.remove(g_shopMenu.pagingElement.pages, i)
+            table.insert(g_shopMenu.pagingElement.pages, targetPosition, child)
             break
         end
     end
 
-    inGameMenu.pagingElement:updateAbsolutePosition()
-    inGameMenu.pagingElement:updatePageMapping()
+    g_shopMenu.pagingElement:updateAbsolutePosition()
+    g_shopMenu.pagingElement:updatePageMapping()
 
-    inGameMenu:registerPage(inGameMenu[pageName], position, predicateFunc)
-    local iconFileName = Utils.getFilename('images/menuIcon.dds', GarageMenu.dir)
-    inGameMenu:addPageTab(inGameMenu[pageName], iconFileName, GuiUtils.getUVs(uvs))
+    g_shopMenu:registerPage(g_shopMenu[pageName], nil, predicateFunc)
 
-    for i = 1, #inGameMenu.pageFrames do
-        local child = inGameMenu.pageFrames[i]
-        if child == inGameMenu[pageName] then
-            table.remove(inGameMenu.pageFrames, i)
-            table.insert(inGameMenu.pageFrames, targetPosition, child)
+    if addTab == true then
+        local iconFileName = Utils.getFilename('images/menuIcon.dds', GarageMenu.dir)
+        g_shopMenu:addPageTab(g_shopMenu[pageName], iconFileName, GuiUtils.getUVs(uvs))
+    end
+
+    for i = 1, #g_shopMenu.pageFrames do
+        local child = g_shopMenu.pageFrames[i]
+        if child == g_shopMenu[pageName] then
+            table.remove(g_shopMenu.pageFrames, i)
+            table.insert(g_shopMenu.pageFrames, targetPosition, child)
             break
         end
     end
 
-    inGameMenu:rebuildTabList()
+    g_shopMenu:rebuildTabList()
 end
 
 addModEventListener(GarageMenu)
