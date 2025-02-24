@@ -9,13 +9,13 @@ function ItemsFrame.new(i18n, messageCenter)
 
     self.dataBindings = {}
     self.items = nil
+    self.createdAttributeElements = {}
 
     self.itemsBtnBack = {
         inputAction = InputAction.MENU_BACK
     }
     self.itemsBtnActivate = {
-        -- text = self.i18n:getText("ui_manage_tasks"),
-        text = "Sell(L)",
+        text = self.i18n:getText("garage_menu_sell"),
         inputAction = InputAction.MENU_ACTIVATE,
         callback = function()
             self:showSellSelected()
@@ -49,7 +49,8 @@ end
 
 function ItemsFrame:onFrameOpen()
     self.detailBox:setVisible(true)
-    self.itemDetailsMap.ingameMap = g_currentMission.hud:getIngameMap()
+    --self.itemDetailsMap.ingameMap = g_currentMission.hud:getIngameMap()
+    self.itemDetailsMap:setIngameMap(g_currentMission.hud:getIngameMap())
     ItemsFrame:superClass().onFrameOpen(self)
     -- Need to refresh buttons on load as with pushDetails we get shop defaults instead otherwise
     self:setMenuButtonInfoDirty()
@@ -58,14 +59,14 @@ end
 
 function ItemsFrame:onFrameClose()
     ItemsFrame:superClass().onFrameClose(self)
+    self.itemsList.selectedIndex = 1
 end
 
 function ItemsFrame:setDisplayItems(items)
     self.items = items
 end
 
-function ItemsFrame:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryName)
-    self.baseCategoryIconUVs = baseCategoryIconUVs
+function ItemsFrame:setCategory(categoryDisplayName, categoryName)
     self.categoryName = categoryName
     self.categoryDisplayName = categoryDisplayName
     self.itemsHeaderText:setText(categoryDisplayName)
@@ -91,26 +92,56 @@ function ItemsFrame:getTitleForSectionHeader(list, section)
 end
 
 function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
-    local item           = self.items[index]
-    local itemCacheEntry = g_currentMission.garageMenu.itemCache[item.xmlFileName]
+    local item = self.items[index]
+    local menuPage = g_currentMission.garageMenu.garagePage
+    local itemCacheEntry = menuPage.itemCache[item.xmlFile.filename]
     cell:getAttribute("icon"):setImageFilename(itemCacheEntry.imageFilename)
     cell:getAttribute("brandIcon"):setImageFilename(item.brand.image)
     cell:getAttribute("title"):setText(itemCacheEntry.itemName)
-    cell:getAttribute("value"):setText(item.price)
-    -- cell:getAttribute("section"):setText(self.renderData[section].name)
-    -- cell:getAttribute("brandIcon"):setText(category.iconFilename) -- TODO copy get from raw from reference
+    cell:getAttribute("value"):setText(g_i18n:formatMoney(item:getSellPrice(), 0, 0, true))
 end
 
 function ItemsFrame:onListSelectionChanged(list, section, index)
     print("onListSelectionChanged:" .. index)
+    local menuPage = g_currentMission.garageMenu.garagePage
     -- TODO - update details panel
-    local item = self.items[self.itemsList.selectedIndex]
-    local itemCacheEntry = g_currentMission.garageMenu.itemCache[item.xmlFileName]
+    local item = self.items[index]
+    local itemCacheEntry = menuPage.itemCache[item.xmlFile.filename]
     self.itemDetailsImage:setImageFilename(itemCacheEntry.imageFilename)
-    self.itemDetailsName:setText(itemCacheEntry.brand.title .. " " .. itemCacheEntry.itemName)
+    self.itemDetailsName:setText(item.brand.title .. " " .. itemCacheEntry.itemName)
+
+    -- local power = AttributeUtils.powerString(item, itemCacheEntry)
+    -- -- operating hours, required power, weight, age, working width, speed, damage, license
+    -- print(power)
+    -- for key, value in pairs(getmetatable(SellItemDialog)) do -- g_shopConfigScreen, g_inGameMenu
+    --     print(key, value)
+    -- end
+
+    for k, element in pairs(self.createdAttributeElements) do
+        element.parent:removeElement(element)
+    end
+
+    local detailTemplate = self.attributesLayout:getDescendantByName("detailTemplate")
+    self.createdAttributeElements = AttributeUtils.createAttributeElements(detailTemplate, self.attributesLayout, item,
+        itemCacheEntry)
+    --     self.boxLayout:invalidateLayout()
+    detailTemplate:setVisible(false)
+    -- get elements
+    -- loop each and set parent
+
+    local x, _, z = getTranslation(item.rootNode)
+    self.itemDetailsMap:setCenterToWorldPosition(x, z)
 end
 
 function ItemsFrame:showSellSelected()
-    print("Sell selected")
-    local selected = self.items[self.itemsList.selectedIndex]
+    local item = self.items[self.itemsList.selectedIndex]
+
+    YesNoDialog.show(
+        function(self, clickOk)
+            if clickOk then
+                g_client:getServerConnection():sendEvent(SellVehicleEvent.new(item, 1, true))
+                self:updateContent()
+            end
+        end, self,
+        g_i18n:getText("garage_menu_confirm_sell"))
 end

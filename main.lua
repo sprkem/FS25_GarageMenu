@@ -14,24 +14,27 @@ GarageMenu = {}
 GarageMenu.dir = g_currentModDirectory
 GarageMenu.modName = g_currentModName
 
+source(GarageMenu.dir .. "AttributeUtils.lua")
 source(GarageMenu.dir .. "gui/MenuGarageMenu.lua")
 source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 
 function GarageMenu:loadMap()
     g_gui:loadProfiles(GarageMenu.dir .. "gui/guiProfiles.xml")
 
-    self.itemCache = {}
-    self.brandCache = {}
-    self.categoryData = nil
+    -- -- self.itemCache = {}
+    -- self.brandCache = {}
+    -- self.categoryData = nil
 
-    self.garagePage = ShopCategoriesFrame:new()
-    g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "garageFrame", self.garagePage, true)
+    -- self.garagePage = ShopCategoriesFrame:new()
+    -- g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "garageFrame", self.garagePage, true)
+    self.garagePage = MenuGarageMenu.new(g_i18n)
+    g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "garageFrame", self.garagePage, false)
 
-    self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
-    self:configureGaragePage()
+    -- self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
+    -- self:configureGaragePage()
 
-    self.garageItemsPage = ItemsFrame.new()
-    g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "menuTaskList", self.garageItemsPage, true)    
+    self.garageItemsPage = ItemsFrame.new(g_i18n)
+    g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "garageItemsFrame", self.garageItemsPage, false)
     g_shopMenu.pagingElement:addElement(self.garageItemsPage)
 
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
@@ -43,9 +46,9 @@ end
 function GarageMenu.onFrameOpen()
     local self = g_currentMission.garageMenu
 
-    local frameXml = "dataS/gui/InGameMenuStatisticsFrame.xml"
-    local xmlFile = loadXMLFile("Temp", frameXml)
-    saveXMLFileTo(xmlFile, g_currentMission.missionInfo.savegameDirectory .. "/InGameMenuStatisticsFrame.xml")
+    -- local frameXml = "dataS/gui/dialogs/SellItemDialog.xml"
+    -- local xmlFile = loadXMLFile("Temp", frameXml)
+    -- saveXMLFileTo(xmlFile, g_currentMission.missionInfo.savegameDirectory .. "/SellItemDialog.xml")
 
     local categoryTypes = g_storeManager:getCategoryTypes()
     local shopCategories = g_shopController:getShopCategories()
@@ -82,92 +85,75 @@ function GarageMenu.onFrameOpen()
     self.garagePage:updatePagingButtons()
 end
 
-function GarageMenu:configureGaragePage()
-    local headerPanel = self.garagePage.elements[1].elements[1].elements[1]
-    local toRemove = {
-        shopMoneyBoxBg = 1,
-        shopMoneyBox = 1
-    }
+-- function GarageMenu:configureGaragePage()
+--     local headerPanel = self.garagePage.elements[1].elements[1].elements[1]
+--     local toRemove = {
+--         shopMoneyBoxBg = 1,
+--         shopMoneyBox = 1
+--     }
 
-    for i = #headerPanel.elements, 1, -1 do
-        local e = headerPanel.elements[i]
-        if toRemove[e.id] ~= nil then
-            table.remove(headerPanel.elements, i)
-        end
-    end
-end
+--     for i = #headerPanel.elements, 1, -1 do
+--         local e = headerPanel.elements[i]
+--         if toRemove[e.id] ~= nil then
+--             table.remove(headerPanel.elements, i)
+--         end
+--     end
+-- end
 
-function GarageMenu:getOwnedItemCategories()
-    local ownedItemCategories = {}
-    local currentFarmId = 1
+-- function GarageMenu:getOwnedItemCategories()
+--     local ownedItemCategories = {}
+--     local currentFarmId = 1
 
-    if self.categoryData == nil then
-        self:setCategoryData()
-    end
+--     if self.categoryData == nil then
+--         self:setCategoryData()
+--     end
 
-    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
-        if vehicle.ownerFarmId == currentFarmId then
-            local xmlFileName = vehicle.xmlFile.filename
-            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+--     for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
+--         if vehicle.ownerFarmId == currentFarmId then
+--             local xmlFileName = vehicle.xmlFile.filename
+--             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
-            local itemCategoryName = self.itemCache[xmlFileName].categoryName
-            local categoryTypeID = self.categoryData[itemCategoryName].sectionID
+--             local itemCategoryName = self.itemCache[xmlFileName].categoryName
+--             local categoryTypeID = self.categoryData[itemCategoryName].sectionID
 
-            if categoryTypeID ~= "OBJECTS" then
-                if ownedItemCategories[categoryTypeID] == nil then ownedItemCategories[categoryTypeID] = {} end
-                ownedItemCategories[categoryTypeID][itemCategoryName] = 1
-            end
-        end
-    end
+--             if categoryTypeID ~= "OBJECTS" then
+--                 if ownedItemCategories[categoryTypeID] == nil then ownedItemCategories[categoryTypeID] = {} end
+--                 ownedItemCategories[categoryTypeID][itemCategoryName] = 1
+--             end
+--         end
+--     end
 
-    return ownedItemCategories
-end
+--     return ownedItemCategories
+-- end
 
-function GarageMenu:setCategoryData()
-    local inGameMenu = g_gui.screenControllers[ShopMenu]
-    self.categoryData = {}
-    for sectionID, entries in pairs(inGameMenu.pageShopVehicles.categories) do
-        for _, category in pairs(entries) do
-            self.categoryData[category.id] = {
-                sectionID = sectionID
-            }
-        end
-    end
-end
+-- function GarageMenu:setCategoryData()
+--     local inGameMenu = g_gui.screenControllers[ShopMenu]
+--     self.categoryData = {}
+--     for sectionID, entries in pairs(inGameMenu.pageShopVehicles.categories) do
+--         for _, category in pairs(entries) do
+--             self.categoryData[category.id] = {
+--                 sectionID = sectionID
+--             }
+--         end
+--     end
+-- end
 
-function GarageMenu:storeItemDetails(itemXml)
-    self.itemCache[itemXml] = {}
-    for index, item in pairs(g_storeManager.items) do
-        if item ~= nil then
-            if item.xmlFilename == itemXml then
-                self.itemCache[itemXml].brand = self:getBrandFromRawName(item.brandNameRaw)
-                self.itemCache[itemXml].categoryName = item.categoryName
-                self.itemCache[itemXml].itemName = item.name
-                self.itemCache[itemXml].canBeSold = item.canBeSold
-                self.itemCache[itemXml].id = item.id
-                self.itemCache[itemXml].imageFilename = item.imageFilename
-                break
-            end
-        end
-    end
-end
-
-function GarageMenu:getBrandFromRawName(rawName)
-    if self.brandCache[rawName] ~= nil then
-        return self.brandCache[rawName]
-    end
-
-    for brandIndex, brandItem in pairs(g_brandManager.indexToBrand) do
-        if brandItem ~= nil then
-            if brandItem.name == rawName then
-                self.brandCache[rawName] = brandItem -- image, imageOffset, name, title (friendly)
-                return self.brandCache[rawName]
-            end
-        else
-            break
-        end
-    end
-end
+-- function GarageMenu:storeItemDetails(itemXml)
+--     self.itemCache[itemXml] = {}
+--     for index, item in pairs(g_storeManager.items) do
+--         if item ~= nil then
+--             if item.xmlFilename == itemXml then
+--                 self.itemCache[itemXml].configurations = item.configurations
+--                 self.itemCache[itemXml].categoryName = item.categoryName
+--                 self.itemCache[itemXml].itemName = item.name
+--                 self.itemCache[itemXml].canBeSold = item.canBeSold
+--                 self.itemCache[itemXml].id = item.id
+--                 self.itemCache[itemXml].imageFilename = item.imageFilename
+--                 break
+--             end
+--         end
+--     end
+-- end
 
 function GarageMenu:getCurrentFarmId()
     local currentFarmId = -1
@@ -180,8 +166,8 @@ end
 
 function GarageMenu.onClickItemCategory(categoryName, screenTitle, categoryDisplayName, baseCategoryIconUVs)
     local self = g_currentMission.garageMenu
-    local categoryItems = g_shopController:getItemsByCategory(categoryName)
-    local currentDisplayItems = categoryItems
+    -- local categoryItems = g_shopController:getItemsByCategory(categoryName)
+    -- local currentDisplayItems = categoryItems
 
     -- if self.state ~= 0 then
     local displayItems = {}
@@ -192,45 +178,21 @@ function GarageMenu.onClickItemCategory(categoryName, screenTitle, categoryDispl
             local xmlFileName = item.xmlFile.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
-            local itemCacheEntry = self.itemCache[xmlFileName]
+            -- local itemCacheEntry = self.itemCache[xmlFileName]
             local itemCategoryName = self.itemCache[xmlFileName].categoryName
 
             -- local mapEntry = self.categoryData[itemCacheEntry.categoryName]
             if itemCategoryName == categoryName then
-                table.insert(displayItems, {
-                    xmlFileName = xmlFileName,
-                    id = item.id,
-                    brand = item.brand,
-                    price = item.price -- might be base price
-                })
+                -- local x, _, z = getTranslation(item.rootNode)
+                table.insert(displayItems, item)
             end
         end
     end
-    -- for i = 1, #categoryItems do
-    --     -- if self:getIsItemVisible(categoryItems[i].storeItem) then
-    --     table.insert(displayItems, categoryItems[i])
-    --     -- end
-    -- end
 
-    currentDisplayItems = displayItems
-    -- end
-
-    g_shopMenu.currentCategoryName = categoryName
-    g_shopMenu.currentDisplayItems = currentDisplayItems
-    g_shopMenu.currentCategoryFilter = ShopMenu.FILTER.OWNED
-    g_shopMenu.currentItemDetailsType = ShopMenu.DETAILS.VEHICLE
-    -- g_shopMenu.pageShopItemDetails:setDisplayItems(currentDisplayItems)
-
-    -- g_shopMenu.pageShopItemDetails:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryDisplayName)
-    -- g_shopMenu:pushDetail(g_shopMenu.pageShopItemDetails)
-
-    self.garageItemsPage:setDisplayItems(currentDisplayItems)
+    self.garageItemsPage:setDisplayItems(displayItems)
 
     self.garageItemsPage:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryName)
     g_shopMenu:pushDetail(self.garageItemsPage)
-    -- g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(self.garageItemsPage))
-    -- local targetIndex = g_shopMenu.pagingElement:getPageMappingIndexByElement(self.garageItemsPage)
-    -- g_shopMenu:onPageChange(targetIndex)
 end
 
 function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()

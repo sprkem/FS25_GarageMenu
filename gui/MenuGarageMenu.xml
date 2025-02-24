@@ -5,7 +5,7 @@
             <Bitmap profile="fs25_menuHeaderIconBg">
                 <Bitmap profile="fs25_menuHeaderIcon" id="categoryHeaderIcon"/>
             </Bitmap>
-            <Text profile="fs25_menuHeaderTitle" id="categoryHeaderText" text="My Garage (localise)"/>
+            <Text profile="fs25_menuHeaderTitle" id="categoryHeaderText" text="$l10n_garage_menu_header"/>
         </GuiElement>
         <SmoothList profile="fs25_shopList" id="categoryList" onDoubleClick="onOpenCategory" listSectionHeader="section" startClipperElementName="startClipper">
             <ListItem profile="fs25_shopListItem" name="category">                
