@@ -2,73 +2,52 @@ AttributeUtils = {}
 AttributeUtils.DISPLAY_BUFFER = 0.0025
 
 function AttributeUtils.createAttributeElements(cache, template, parent, vehicle, storeItem)
-    local elements = {}
-    local profiles = {
-        shopListAttributeIconOperatingHours = AttributeUtils.resolveOperatingHours,
-        shopListAttributeIconPower = AttributeUtils.resolvePower,
-        shopListAttributeIconLicensePlate = AttributeUtils.resolveLicensePlate,
-        -- shopListAttributeIconPowerReq
-        -- shopListAttributeIconWeight
-        -- shopListAttributeIconWorkSpeed
-        -- shopListAttributeIconWorkingWidth
-        -- shopListAttributeIconLifeTime,
-        -- shopListAttributeIconWheels,
-        -- shopListAttributeIconCondition,
-        -- shopListAttributeIconBaleSizeRound
-        -- shopListAttributeIconAdditionalWeight
-        -- shopListAttributeIconBaleSizeSquare
-    }
+    -- local elements = {}
 
-    for profile, resolver in pairs(profiles) do
-        -- if cache[profile] == nil then
-        --     local itemElement = template:clone(parent)
-        --     -- itemElement:setVisible(true)
-        --     local iconElement = itemElement:getDescendantByName("icon")
-        --     local textElement = itemElement:getDescendantByName("text")
-        --     textElement.sizeStr = "100% 100%"
-        --     iconElement:applyProfile(profile)
-        --     cache[profile] = itemElement
-        -- end
+    local detailProfiles = {}
+    table.insert(detailProfiles,
+        { profile = "shopListAttributeIconOperatingHours", resolver = AttributeUtils.resolveOperatingHours })
+    table.insert(detailProfiles, { profile = "shopListAttributeIconPower", resolver = AttributeUtils.resolvePower })
+    table.insert(detailProfiles, { profile = "shopListAttributeIconWeight", resolver = AttributeUtils.resolveWeight })
+    table.insert(detailProfiles,
+        { profile = "shopListAttributeIconLicensePlate", resolver = AttributeUtils.resolveLicensePlate })
+    table.insert(detailProfiles, { profile = "shopListAttributeIconPowerReq", resolver = AttributeUtils.resolvePowerReq })
+    table.insert(detailProfiles, { profile = "shopListAttributeIconLifeTime", resolver = AttributeUtils.resolveLifeTime })
 
-        -- resolver(cache[profile], vehicle, storeItem)
-        local created = resolver(template, profile, vehicle, storeItem)
-        if created ~= nil then
-            parent:addElement(created)
-            table.insert(elements, created)
+    -- local profiles = {
+
+    --     -- shopListAttributeIconWorkSpeed
+    --     -- shopListAttributeIconWorkingWidth
+    --     -- shopListAttributeIconWheels,
+    --     -- shopListAttributeIconCondition,
+    --     -- shopListAttributeIconBaleSizeRound
+    --     -- shopListAttributeIconAdditionalWeight
+    --     -- shopListAttributeIconBaleSizeSquare
+    -- }
+
+    for _, value in pairs(detailProfiles) do
+        local profile = value.profile
+        local resolver = value.resolver
+        if cache[profile] == nil then
+            local itemElement = template:clone(parent)
+            itemElement:setVisible(false)
+            local iconElement = itemElement:getDescendantByName("icon")
+            iconElement:applyProfile(profile)
+            cache[profile] = itemElement
         end
+
+        resolver(cache[profile], vehicle, storeItem)
     end
 
-    for _, element in pairs(elements) do
+    for _, element in pairs(cache) do
         local iconElement = element:getDescendantByName("icon")
         local textElement = element:getDescendantByName("text")
 
         element:setSize(textElement.size[1] + iconElement.size[1] + AttributeUtils.DISPLAY_BUFFER, textElement.size[2])
     end
-
-    return elements
-    -- local itemElement = template:clone(parent)
-    -- local iconElement = itemElement:getDescendantByName("icon")
-    -- local textElement = itemElement:getDescendantByName("text")
-    -- textElement.sizeStr = "100% 100%"
-    -- iconElement:applyProfile("shopListAttributeIconLicensePlate")
-    -- textElement:setText("ABC 123 256")
 end
 
-function AttributeUtils.createElement(template, profile)
-    local itemElement = template:clone()
-    -- itemElement.sizeStr = "100% 100%"
-    -- itemElement:resolveSizeString()
-    -- itemElement:setVisible(true)
-    local iconElement = itemElement:getDescendantByName("icon")
-    local textElement = itemElement:getDescendantByName("text")
-    -- textElement.sizeStr = "100% 100%"
-    -- textElement:resolveSizeString()
-    iconElement:applyProfile(profile)
-    return itemElement
-end
-
-function AttributeUtils.resolveOperatingHours(template, profile, vehicle, storeItem)
-    local element = AttributeUtils.createElement(template, profile)
+function AttributeUtils.resolveOperatingHours(element, vehicle, storeItem)
     local formatted = string.format(
         "%.2f h",
         vehicle.operatingTime / 1000 / 60 / 60
@@ -77,80 +56,91 @@ function AttributeUtils.resolveOperatingHours(template, profile, vehicle, storeI
     local textElement = element:getDescendantByName("text")
     textElement:setText(formatted)
     return element
-    --textElement:updateSize()
 end
 
-function AttributeUtils.resolvePower(template, profile, vehicle, storeItem)
+function AttributeUtils.resolvePower(element, vehicle, storeItem)
     if vehicle.boughtConfigurations == nil or vehicle.boughtConfigurations.motor == nil then
-        return nil
+        return
     end
 
-    local element = AttributeUtils.createElement(template, profile)
+    local boughtMotor = vehicle.configurations.motor
+    local motorPower  = storeItem.configurations.motor[boughtMotor].power
+    if motorPower == nil then return end
 
     element:setVisible(true)
+
+    local hp, _ = g_i18n:getPower(motorPower)
+
     local textElement = element:getDescendantByName("text")
-    textElement:setText(AttributeUtils.powerString(vehicle, storeItem))
-    return element
-    --textElement:updateSize()
+    textElement:setText(string.format(g_i18n:getText("shop_maxPowerValueSingle"), math.floor(hp)))
 end
 
-function AttributeUtils.resolveLicensePlate(template, profile, vehicle, storeItem)
+function AttributeUtils.resolveLicensePlate(element, vehicle, storeItem)
     if vehicle.spec_licensePlates == nil or vehicle.spec_licensePlates.licensePlateData == nil then
-        return nil
+        return
     end
-
-    local element = AttributeUtils.createElement(template, profile)
 
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
-    print(textElement.size[1])
-    print(textElement.size[2])
     textElement:setText(table.concat(vehicle.spec_licensePlates.licensePlateData.characters))
-    print(textElement.size[1])
-    print(textElement.size[2])
-    textElement:updateSize()
 
+    -- local license = nil
+    -- for k, v in g_inGameMenu.attributesLayout.elements do
+    --     local icon = v.elements[1]
+    --     if icon.profile == "shopListAttributeIconLicensePlate" then
+    --         license = v
+    --     end
+    -- end
+end
 
-    local license = nil
-    for k, v in g_inGameMenu.attributesLayout.elements do
-        local icon = v.elements[1]
-        if icon.profile == "shopListAttributeIconLicensePlate" then
-            license = v
+function AttributeUtils.resolvePowerReq(element, vehicle, storeItem)
+    if storeItem.specs == nil or storeItem.specs.neededPower == nil then
+        return
+    end
+
+    local powerConfig = 0
+    local neededPower = 0
+
+    if vehicle.configurations ~= nil and vehicle.configurations.powerConsumer ~= nil then
+        powerConfig = vehicle.configurations.powerConsumer
+    end
+
+    if powerConfig == 0 and storeItem.specs.neededPower.base ~= nil then
+        neededPower = storeItem.specs.neededPower.base
+    else
+        if storeItem.specs.neededPower.config[powerConfig] ~= nil then
+            neededPower = storeItem.specs.neededPower.config[powerConfig]
         end
     end
 
-    -- if license ~= nil then
-    --     print('1')
-    --     AttributeUtils.listDifference(license, element)
-    --     print('2')
-    --     AttributeUtils.listDifference(license.elements[1], element.elements[1])
-    --     print('3')
-    --     AttributeUtils.listDifference(license.elements[2], element.elements[2])
-    -- end
-
-    return element
+    if neededPower > 0 then
+        local result = string.format(g_i18n:getText("shop_maxPowerValueSingle"), math.floor(neededPower))
+        element:setVisible(true)
+        local textElement = element:getDescendantByName("text")
+        textElement:setText(result)
+    end
 end
 
--- function AttributeUtils.listDifference(a,b)
---     for k, v in pairs(a) do
---         if type(v) ~= "table" then
---             if b[k] == nil then
---                 print("Element B is Missing key: " .. k)
---             end
+function AttributeUtils.resolveLifeTime(element, vehicle, storeItem)
+    element:setVisible(true)
+    local textElement = element:getDescendantByName("text")
+    textElement:setText(string.format("%s %s", vehicle.age, g_i18n:getText("ui_months")))
+end
 
---             if b[k] ~= v then
---                 print("Element B has different value for key: " .. k .. " A: " .. v .. " B: " .. b[k])
---             end
---         end
---     end
--- end
+function AttributeUtils.resolveWeight(element, vehicle, storeItem)
+    if vehicle.getTotalMass == nil then
+        return
+    end
 
-function AttributeUtils.powerString(vehicle, storeItem)
-    local boughtMotor = vehicle.configurations.motor
-    local motorPower  = storeItem.configurations.motor[boughtMotor].power
+    local mass = vehicle:getTotalMass()
 
-    if motorPower == nil then return nil end
+    local unit = "unit_kg"
+    if mass > 1000 then
+        mass = mass / 1000
+        unit = "unit_tonsShort"
+    end
 
-    local hp, _ = g_i18n:getPower(motorPower)
-    return string.format(g_i18n:getText("shop_maxPowerValueSingle"), math.floor(hp))
+    element:setVisible(true)
+    local textElement = element:getDescendantByName("text")
+    textElement:setText(string.format("%.2f %s", mass, g_i18n:getText(unit)))
 end

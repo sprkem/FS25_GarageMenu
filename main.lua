@@ -27,16 +27,16 @@ function GarageMenu:loadMap()
 
     -- self.garagePage = ShopCategoriesFrame:new()
     -- g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "garageFrame", self.garagePage, true)
-    self.garagePage = MenuGarageMenu.new(g_i18n)
+    self.garagePage = MenuGarageMenu.new()
     g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "garageFrame", self.garagePage, false)
-
+    self.garagePage:initialize()
     -- self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
     -- self:configureGaragePage()
 
-    self.garageItemsPage = ItemsFrame.new(g_i18n)
+    self.garageItemsPage = ItemsFrame.new()
     g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "garageItemsFrame", self.garageItemsPage, false)
-    g_shopMenu.pagingElement:addElement(self.garageItemsPage)
-    self.garageItemsPage:setTemplates()
+    g_shopMenu.pagingElement:addElement(self.garageItemsPage)    
+    self.garageItemsPage:initialize()
 
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
         GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), true, "pageUsedSale")

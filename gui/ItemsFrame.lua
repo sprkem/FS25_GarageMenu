@@ -1,29 +1,36 @@
 ItemsFrame = {}
 ItemsFrame._mt = Class(ItemsFrame, TabbedMenuFrameElement)
 
-function ItemsFrame.new(i18n, messageCenter)
+function ItemsFrame.new()
     local self = ItemsFrame:superClass().new(nil, ItemsFrame._mt)
     self.name = "itemsFrame"
-    self.i18n = i18n
-    self.messageCenter = messageCenter
 
-    self.dataBindings = {}
     self.items = nil
     self.elementCache = {}
 
-    self.itemsBtnBack = {
+    self.btnBack = {
         inputAction = InputAction.MENU_BACK
     }
-    self.itemsBtnActivate = {
-        text = self.i18n:getText("garage_menu_sell"),
-        inputAction = InputAction.MENU_ACTIVATE,
+    self.btnPreviousPage = {
+        text = g_i18n:getText("ui_ingameMenuPrev"),
+        inputAction = InputAction.MENU_PAGE_PREV
+    }
+    self.btnNextPage = {
+        text = g_i18n:getText("ui_ingameMenuNext"),
+        inputAction = InputAction.MENU_PAGE_NEXT
+    }
+    self.btnSell = {
+        text = g_i18n:getText("ui_sellItem"),
+        inputAction = InputAction.MENU_ACCEPT,
         callback = function()
             self:showSellSelected()
         end
     }
     self:setMenuButtonInfo({
-        self.itemsBtnBack,
-        self.itemsBtnActivate
+        self.btnBack,
+        self.btnNextPage,
+        self.btnPreviousPage,
+        self.btnSell
     })
 
     return self
@@ -54,6 +61,7 @@ function ItemsFrame:onGuiSetupFinished()
 end
 
 function ItemsFrame:initialize()
+    self:setTemplates()
 end
 
 function ItemsFrame:onFrameOpen()
@@ -120,11 +128,11 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
     self.itemDetailsName:setText(item.brand.title .. " " .. itemCacheEntry.itemName)
 
     for k, element in pairs(self.elementCache) do
-        -- element:setVisible(false)
-        element.parent:removeElement(element)
+        element:setVisible(false)
+        -- element.parent:removeElement(element)
     end
 
-    self.elementCache = AttributeUtils.createAttributeElements(self.elementCache, self.detailTemplate, self.attributesLayout, item,
+    AttributeUtils.createAttributeElements(self.elementCache, self.detailTemplate, self.attributesLayout, item,
         itemCacheEntry)
 
     self.attributesLayout:invalidateLayout()

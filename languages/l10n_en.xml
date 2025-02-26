@@ -3,7 +3,6 @@
     <translationContributors/>
 	<texts>
         <text name="garage_menu_header" text="MY GARAGE"/>
-        <text name="garage_menu_confirm_sell" text="Are you sure you want to sell?"/>
-        <text name="garage_menu_sell" text="Sell"/>
+        <text name="garage_menu_confirm_sell" text="Are you sure you want to sell?"/>        
 	</texts>
 </l10n>

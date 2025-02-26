@@ -1,19 +1,40 @@
 MenuGarageMenu = {}
 MenuGarageMenu._mt = Class(MenuGarageMenu, TabbedMenuFrameElement)
 
-function MenuGarageMenu.new(i18n, messageCenter)
+function MenuGarageMenu.new()
     local self = MenuGarageMenu:superClass().new(nil, MenuGarageMenu._mt)
     self.name = "menuGarageMenu"
-    self.i18n = i18n
-    self.messageCenter = messageCenter
 
+    self.categoryHeaderText = g_i18n:getText("shop_ownedItems")
     self.dataBindings = {}
     self.itemCache = {}
     self.categories = nil
     self.categoryTypes = nil
 
-    -- self.sectionData = nil
-    -- self.categoryData = nil
+    self.btnBack = {
+        inputAction = InputAction.MENU_BACK
+    }
+    self.btnPreviousPage = {
+        text = g_i18n:getText("ui_ingameMenuPrev"),
+        inputAction = InputAction.MENU_PAGE_PREV
+    }
+    self.btnNextPage = {
+        text = g_i18n:getText("ui_ingameMenuNext"),
+        inputAction = InputAction.MENU_PAGE_NEXT
+    }
+    self.btnSelectCategory = {
+        text = g_i18n:getText("button_select"),
+        inputAction = InputAction.MENU_ACCEPT,
+        callback = function()
+            self:onOpenCategory()
+        end
+    }
+    self:setMenuButtonInfo({
+        self.btnBack,
+        self.btnNextPage,
+        self.btnPreviousPage,
+        self.btnSelectCategory
+    })
 
     return self
 end
@@ -58,12 +79,14 @@ function MenuGarageMenu:storeItemDetails(itemXml)
     for index, item in pairs(g_storeManager.items) do
         if item ~= nil then
             if item.xmlFilename == itemXml then
+                StoreItemUtil.loadSpecsFromXML(item)
                 self.itemCache[itemXml].configurations = item.configurations
                 self.itemCache[itemXml].categoryName = item.categoryName
                 self.itemCache[itemXml].itemName = item.name
                 self.itemCache[itemXml].canBeSold = item.canBeSold
                 self.itemCache[itemXml].id = item.id
                 self.itemCache[itemXml].imageFilename = item.imageFilename
+                self.itemCache[itemXml].specs = item.specs
                 break
             end
         end
@@ -86,10 +109,12 @@ function MenuGarageMenu:onGuiSetupFinished()
 end
 
 function MenuGarageMenu:initialize()
+    self.categoryHeaderText:setText(g_i18n:getText("shop_ownedItems"))
 end
 
 function MenuGarageMenu:onFrameOpen()
     MenuGarageMenu:superClass().onFrameOpen(self)
+    self:setMenuButtonInfoDirty()
     self:updateContent()
 end
 
@@ -112,24 +137,15 @@ function MenuGarageMenu:updateContent()
         self:setCategoryData()
     end
 
-    print("MenuGarageMenu:updateContent()")
     local currentFarmId = self:getCurrentFarmId()
     local dataByCategory = {}
-    local sectionIndexMap = {}
 
-
-
-
-
-    -- local categoryIndexMap = {}
-    -- local nextSectionIndex = 1
     for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
         if vehicle.ownerFarmId == currentFarmId then
             local xmlFileName = vehicle.xmlFile.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
             local itemCacheEntry = self.itemCache[xmlFileName]
-            -- local itemCategoryName = self.itemCache[xmlFileName].categoryName
             local mapEntry = self.categoryData[itemCacheEntry.categoryName]
 
             if dataByCategory[mapEntry.sectionID] == nil then
@@ -149,42 +165,6 @@ function MenuGarageMenu:updateContent()
             end
 
             table.insert(dataByCategory[mapEntry.sectionID].categories[mapEntry.sortValue].items, vehicle)
-
-            -- if mapEntry.sectionID ~= "OBJECTS" then
-            --     if sectionIndexMap[mapEntry.sectionID] == nil then
-            --         sectionIndexMap[mapEntry.sectionID] = {
-            --             sectionIndex = nextSectionIndex,
-            --             nextCategoryIndex = 1,
-            --             categories = {}
-            --         }
-            --         self.renderData[nextSectionIndex] = {
-            --             iconFilename = mapEntry.iconFilename,
-            --             id = mapEntry.sectionID,
-            --             categories = {}
-            --         }
-            --         nextSectionIndex = nextSectionIndex + 1
-            --     end
-
-            --     local sectionIndexMapEntry = sectionIndexMap[mapEntry.sectionID]
-            --     local sectionIndex = sectionIndexMap[mapEntry.sectionID].sectionIndex
-
-            --     if sectionIndexMap[mapEntry.sectionID].categories[itemCategoryName] == nil then
-            --         sectionIndexMap[mapEntry.sectionID].categories[itemCategoryName] = {
-            --             categoryIndex = sectionIndexMapEntry.nextCategoryIndex
-            --         }
-            --         self.renderData[sectionIndex].categories[sectionIndexMapEntry.nextCategoryIndex] = {
-            --             name = itemCategoryName,
-            --             iconFilename = mapEntry.iconFilename,
-            --             label = mapEntry.label,
-            --             items = {},
-            --         }
-            --         sectionIndexMapEntry.nextCategoryIndex = sectionIndexMapEntry.nextCategoryIndex + 1
-            --     end
-
-            --     local categoryIndex = sectionIndexMap[mapEntry.sectionID].categories[itemCategoryName].categoryIndex
-
-            --     table.insert(self.renderData[sectionIndex].categories[categoryIndex].items, self.itemCache[xmlFileName])
-            -- end
         end
     end
 
@@ -193,7 +173,7 @@ function MenuGarageMenu:updateContent()
         if detail.name ~= "OBJECTS" then
             if dataByCategory[detail.name] ~= nil then
                 local toInsert = {
-                    id    = dataByCategory[detail.name].id,
+                    id         = dataByCategory[detail.name].id,
                     categories = {}
                 }
                 for _, category in pairs(dataByCategory[detail.name].categories) do
@@ -205,25 +185,6 @@ function MenuGarageMenu:updateContent()
         end
     end
 
-    -- self.categoryTypes = g_storeManager:getCategoryTypes()
-    -- local shopCategories = g_shopController:getShopCategories()
-    -- local ownedItemCategories = self:getOwnedItemCategories()
-    -- local displayCategories = {}
-
-    -- for k, category in pairs(shopCategories) do
-    --     if ownedItemCategories[k] ~= nil then
-    --         local itemCategories = {}
-    --         for _, itemCategory in pairs(category) do
-    --             if ownedItemCategories[k][itemCategory.id] ~= nil then
-    --                 table.insert(itemCategories, itemCategory)
-    --             end
-    --         end
-    --         displayCategories[k] = itemCategories
-    --     end
-    -- end
-
-    -- self.categories = displayCategories
-    -- DebugUtil.printTableRecursively(self.renderData)
     self.categoryList:reloadData()
 end
 
@@ -245,18 +206,16 @@ function MenuGarageMenu:getCellTypeForItemInSection(list, section, index)
     return "category"
 end
 
-function MenuGarageMenu:populateCellForItemInSection(list, section, index, cell)    
+function MenuGarageMenu:populateCellForItemInSection(list, section, index, cell)
     local category = self.renderData[section].categories[index]
     local categoryInfo = self.categoryData[category.categoryName]
     cell:getAttribute("icon"):setImageFilename(categoryInfo.iconFilename)
     cell:getAttribute("title"):setText(categoryInfo.label)
-    -- cell:getAttribute("value"):setText(category.label)
-    -- cell:getAttribute("section"):setText(self.renderData[section].name)
-    -- cell:getAttribute("brandIcon"):setText(category.iconFilename) -- TODO copy get from raw from reference
 end
 
-function MenuGarageMenu:onOpenCategory(list, sectionIndex, index, element)
-    local section = self.renderData[sectionIndex]
+function MenuGarageMenu:onOpenCategory(_, _, _, _)
+    local section = self.renderData[self.categoryList.selectedSectionIndex]
+    local index = self.categoryList.selectedIndex
     local itemsPage = g_currentMission.garageMenu.garageItemsPage
     if section ~= nil and section.categories[index] ~= nil then
         itemsPage:setDisplayItems(section.categories[index].items)
@@ -264,34 +223,3 @@ function MenuGarageMenu:onOpenCategory(list, sectionIndex, index, element)
         g_shopMenu:pushDetail(itemsPage)
     end
 end
-
--- function MenuGarageMenu:getOwnedItemCategories()
---     local ownedItemCategories = {}
---     -- local gm = g_currentMission.garageMenu
---     local currentFarmId = self:getCurrentFarmId()
-
---     if self.categoryData == nil then
---         self:setCategoryData()
---     end
-
---     for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
---         if vehicle.ownerFarmId == currentFarmId then
---             local xmlFileName = vehicle.xmlFile.filename
---             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
-
---             local itemCategoryName = self.itemCache[xmlFileName].categoryName
---             local categoryTypeID = self.categoryData[itemCategoryName].sectionID
-
---             if categoryTypeID ~= "OBJECTS" then
---                 if ownedItemCategories[categoryTypeID] == nil then ownedItemCategories[categoryTypeID] = {} end
---                 ownedItemCategories[categoryTypeID][itemCategoryName] = 1
---             end
---         end
---     end
-
---     return ownedItemCategories
--- end
-
--- function MenuGarageMenu:onListSelectionChanged(list, section, index)
---     self.selectedGroupIndex = index
--- end
