@@ -36,6 +36,7 @@ function GarageMenu:loadMap()
     self.garageItemsPage = ItemsFrame.new(g_i18n)
     g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "garageItemsFrame", self.garageItemsPage, false)
     g_shopMenu.pagingElement:addElement(self.garageItemsPage)
+    self.garageItemsPage:setTemplates()
 
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
         GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), true, "pageUsedSale")

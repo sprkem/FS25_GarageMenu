@@ -37,9 +37,9 @@
                 <Text profile="fs25_vehiclesDetailsName" id="itemDetailsName"/>
                 <Bitmap profile="fs25_itemDetailsFruitIcon" id="fruitIconTemplate" visible="false"/>
                 <BoxLayout profile="fs25_vehiclesDetailsInfoBox" id="attributesLayout">
-                    <GuiElement profile="fs25_itemDetailsTemplateBox" name="detailTemplate">
+                    <GuiElement profile="garageMenu_detailTemplate" name="detailTemplate">
                         <Bitmap profile="fs25_itemDetailsIcon" name="icon"/>
-                        <Text profile="fs25_itemDetailsText" text="Default" name="text"/>
+                        <Text profile="fs25_itemDetailsText" text="Default" name="text" textAutoWidth="true"/>
                     </GuiElement>
                     <GuiElement profile="fs25_itemDetailsTemplateBox" name="valueTemplate">
                         <Bitmap profile="shopListAttributeIconPrice" name="icon"/>

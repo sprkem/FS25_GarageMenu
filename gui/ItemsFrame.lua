@@ -9,7 +9,7 @@ function ItemsFrame.new(i18n, messageCenter)
 
     self.dataBindings = {}
     self.items = nil
-    self.createdAttributeElements = {}
+    self.elementCache = {}
 
     self.itemsBtnBack = {
         inputAction = InputAction.MENU_BACK
@@ -27,6 +27,15 @@ function ItemsFrame.new(i18n, messageCenter)
     })
 
     return self
+end
+
+function ItemsFrame:setTemplates()
+    self.detailTemplate = self.attributesLayout:getDescendantByName("detailTemplate")
+    self.valueTemplate = self.attributesLayout:getDescendantByName("valueTemplate")
+    self.fillTypesTemplate = self.attributesLayout:getDescendantByName("fillTypesTemplate")
+    self.detailTemplate:setVisible(false)
+    self.valueTemplate:setVisible(false)
+    self.fillTypesTemplate:setVisible(false)
 end
 
 function ItemsFrame:delete()
@@ -110,24 +119,15 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
     self.itemDetailsImage:setImageFilename(itemCacheEntry.imageFilename)
     self.itemDetailsName:setText(item.brand.title .. " " .. itemCacheEntry.itemName)
 
-    -- local power = AttributeUtils.powerString(item, itemCacheEntry)
-    -- -- operating hours, required power, weight, age, working width, speed, damage, license
-    -- print(power)
-    -- for key, value in pairs(getmetatable(SellItemDialog)) do -- g_shopConfigScreen, g_inGameMenu
-    --     print(key, value)
-    -- end
-
-    for k, element in pairs(self.createdAttributeElements) do
+    for k, element in pairs(self.elementCache) do
+        -- element:setVisible(false)
         element.parent:removeElement(element)
     end
 
-    local detailTemplate = self.attributesLayout:getDescendantByName("detailTemplate")
-    self.createdAttributeElements = AttributeUtils.createAttributeElements(detailTemplate, self.attributesLayout, item,
+    self.elementCache = AttributeUtils.createAttributeElements(self.elementCache, self.detailTemplate, self.attributesLayout, item,
         itemCacheEntry)
-    --     self.boxLayout:invalidateLayout()
-    detailTemplate:setVisible(false)
-    -- get elements
-    -- loop each and set parent
+
+    self.attributesLayout:invalidateLayout()
 
     local x, _, z = getTranslation(item.rootNode)
     self.itemDetailsMap:setCenterToWorldPosition(x, z)

@@ -13,6 +13,10 @@
     <Profile name="garageMenu_shopItemsListItem" extends="emptyPanel" with="anchorTopLeft">
         <size value="275px 250px"/>
     </Profile>
+    <Profile name="garageMenu_detailTemplate">
+        <margin value="0 5px 15px 0"/>        
+        <size value="100px 30px"/>
+    </Profile>
     <Profile name="garageMenu_shopItemsListItemImage" extends="baseReference" with="anchorTopCenter">
         <size value="200px 200px"/>
         <position value="0px 60px"/>
