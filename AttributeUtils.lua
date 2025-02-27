@@ -1,42 +1,10 @@
 AttributeUtils = {}
 AttributeUtils.DISPLAY_BUFFER = 0.0025
 
-function AttributeUtils.createAttributeElements(cache, template, parent, vehicle, storeItem)
-    local detailProfiles = {}
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconOperatingHours", resolver = AttributeUtils.resolveOperatingHours })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconPower", resolver = AttributeUtils.resolvePower })
 
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconCapacity", resolver = AttributeUtils.resolveCapacity })
-
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconTransmission", resolver = AttributeUtils.resolveTransmission })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconFuel", resolver = AttributeUtils.resolveFuel })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconWorkSpeed", resolver = AttributeUtils.resolveWorkSpeed })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconWeight", resolver = AttributeUtils.resolveWeight })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconPowerReq", resolver = AttributeUtils.resolvePowerReq })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconWheels", resolver = AttributeUtils.resolveWheels })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconBaleSizeRound", resolver = AttributeUtils.resolveBaleSizeRound })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconBaleSizeSquare", resolver = AttributeUtils.resolveBaleSizeSquare })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconBaleWrapperBaleSizeRound", resolver = AttributeUtils.resolveBaleWrapRound })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconBaleWrapperBaleSizeSquare", resolver = AttributeUtils.resolveBaleWrapSquare })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconLicensePlate", resolver = AttributeUtils.resolveLicensePlate })
-    table.insert(detailProfiles, { profile = "shopListAttributeIconLifeTime", resolver = AttributeUtils.resolveLifeTime })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconWorkingWidth", resolver = AttributeUtils.resolveWorkWidth })
-    table.insert(detailProfiles,
-        { profile = "shopListAttributeIconCondition", resolver = AttributeUtils.resolveCondition })
-
-    for _, value in pairs(detailProfiles) do
+function AttributeUtils.seedCache(cache, template, parent)
+    for _, value in pairs(AttributeUtils.PROFILES) do
         local profile = value.profile
-        local resolver = value.resolver
         if cache[profile] == nil then
             local itemElement = template:clone(parent)
             itemElement:setVisible(false)
@@ -44,6 +12,15 @@ function AttributeUtils.createAttributeElements(cache, template, parent, vehicle
             iconElement:applyProfile(profile)
             cache[profile] = itemElement
         end
+    end
+end
+
+function AttributeUtils.createAttributeElements(cache, vehicle, storeItem)
+    --shopListAttributeIconOutput
+    --shopListAttributeIconSeeds
+    for _, value in pairs(AttributeUtils.PROFILES) do
+        local profile = value.profile
+        local resolver = value.resolver
 
         resolver(cache[profile], vehicle, storeItem)
     end
@@ -59,14 +36,9 @@ end
 
 function AttributeUtils.resolveOperatingHours(element, vehicle, storeItem)
     local hours = Vehicle.getSpecValueOperatingTime(storeItem, vehicle)
-
     if hours == nil then
         return
     end
-    -- local formatted = string.format(
-    --     "%.1f h",
-    --     vehicle.operatingTime / 1000 / 60 / 60
-    -- )
 
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
@@ -102,31 +74,6 @@ function AttributeUtils.resolveLicensePlate(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolvePowerReq(element, vehicle, storeItem)
-    -- if storeItem.specs == nil or storeItem.specs.neededPower == nil then
-    --     return
-    -- end
-
-    -- local powerConfig = 0
-    -- local neededPower = 0
-
-    -- if vehicle.configurations ~= nil and vehicle.configurations.powerConsumer ~= nil then
-    --     powerConfig = vehicle.configurations.powerConsumer
-    -- end
-
-    -- if powerConfig == 0 and storeItem.specs.neededPower.base ~= nil then
-    --     neededPower = storeItem.specs.neededPower.base
-    -- else
-    --     if storeItem.specs.neededPower.config[powerConfig] ~= nil then
-    --         neededPower = storeItem.specs.neededPower.config[powerConfig]
-    --     end
-    -- end
-
-    -- if neededPower > 0 then
-    --     local result = string.format(g_i18n:getText("shop_maxPowerValueSingle"), math.floor(neededPower))
-    --     element:setVisible(true)
-    --     local textElement = element:getDescendantByName("text")
-    --     textElement:setText(result)
-    -- end
     local power = Motorized.getSpecValuePower(storeItem, vehicle)
     if power == nil then
         return
@@ -147,11 +94,7 @@ function AttributeUtils.resolveLifeTime(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolveWeight(element, vehicle, storeItem)
-    -- if vehicle.getTotalMass == nil then
-    --     return
-    -- end
     local mass = Vehicle.getSpecValueWeight(storeItem, vehicle)
-
     if mass == nil then
         return
     end
@@ -162,44 +105,22 @@ function AttributeUtils.resolveWeight(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolveWorkSpeed(element, vehicle, storeItem)
-    -- if storeItem.specs.speedLimit == nil then
-    --     return
-    -- end
-    -- local speedLimit = math.floor(storeItem.specs.speedLimit)
     local workSpeed = Vehicle.getSpecValueSpeedLimit(storeItem, vehicle)
-
     if workSpeed == nil then
         return
     end
 
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
-    -- textElement:setText(string.format("%.1f %s", g_i18n:getSpeed(speedLimit), g_i18n:getSpeedMeasuringUnit()))
     textElement:setText(workSpeed)
 end
 
 function AttributeUtils.resolveWorkWidth(element, vehicle, storeItem)
-    -- if storeItem.specs == nil then
-    --     return
-    -- end
-
     local workingWidth = Vehicle.getSpecValueWorkingWidth(storeItem, vehicle)
 
     if workingWidth == nil then
         return
     end
-
-    -- local workingWidth = nil
-    -- if storeItem.specs.workingWidth ~= nil then
-    --     workingWidth = storeItem.specs.workingWidth
-    -- elseif storeItem.specs.workingWidthConfig ~= nil and vehicle.configurations.powerConsumer ~= nil then
-    --     local powerConfig = vehicle.configurations.powerConsumer
-    --     workingWidth = storeItem.specs.workingWidthConfig.powerConsumer[powerConfig]
-    -- end
-
-    -- if workingWidth == nil then
-    --     return
-    -- end
 
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
@@ -208,16 +129,7 @@ function AttributeUtils.resolveWorkWidth(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolveWheels(element, vehicle, storeItem)
-    -- if vehicle.spec_wheels == nil or vehicle.spec_wheels.wheels == nil or vehicle.spec_wheels.wheels[1] == nil then
-    --     return
-    -- end
-
-    -- local name = vehicle.spec_wheels.wheels[1].name
-    -- if name == nil then
-    --     return
-    -- end
     local name = Wheels.getSpecValueWheels(storeItem, vehicle)
-
     if name == nil then
         return
     end
@@ -228,7 +140,6 @@ function AttributeUtils.resolveWheels(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolveCondition(element, vehicle, storeItem)
-    -- local damage = vehicle:getDamageAmount()
     local condition = Wearable.getSpecValueCondition(storeItem, vehicle)
     if condition == nil then
         return
@@ -237,22 +148,10 @@ function AttributeUtils.resolveCondition(element, vehicle, storeItem)
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
     textElement:setText(condition)
-    -- textElement:setText(math.floor((damage) * 100) .. " %")
 end
 
 function AttributeUtils.resolveTransmission(element, vehicle, storeItem)
-    -- if storeItem.specs == nil or storeItem.specs.transmission == nil then
-    --     return
-    -- end
-
-    -- local transmission = storeItem.specs.transmission[1]
-
-    -- if transmission == nil then
-    --     return
-    -- end
-
     local transmission = Motorized.getSpecValueTransmission(storeItem, vehicle)
-
     if transmission == nil then
         return
     end
@@ -297,13 +196,6 @@ function AttributeUtils.resolveBaleSizeRound(element, vehicle, storeItem)
         textElement:setText(string.format("%s%s-%s%s", math.floor(spec.minDiameter * 100), g_i18n:getText("unit_cmShort"),
             math.floor(spec.maxDiameter * 100), g_i18n:getText("unit_cmShort")))
     end
-    -- local size = BaleLoader.loadSpecValueBaleSizeRound(storeItem, vehicle)
-    -- if size == nil then
-    --     return
-    -- end
-    -- element:setVisible(true)
-    -- local textElement = element:getDescendantByName("text")
-    -- textElement:setText(size)
 end
 
 function AttributeUtils.resolveBaleSizeSquare(element, vehicle, storeItem)
@@ -320,13 +212,6 @@ function AttributeUtils.resolveBaleSizeSquare(element, vehicle, storeItem)
         textElement:setText(string.format("%s%s-%s%s", math.floor(spec.minLength * 100), g_i18n:getText("unit_cmShort"),
             math.floor(spec.maxLength * 100), g_i18n:getText("unit_cmShort")))
     end
-    -- local size = BaleLoader.loadSpecValueBaleSizeSquare(storeItem, vehicle)
-    -- if size == nil then
-    --     return
-    -- end
-    -- element:setVisible(true)
-    -- local textElement = element:getDescendantByName("text")
-    -- textElement:setText(size)
 end
 
 function AttributeUtils.resolveBaleWrapRound(element, vehicle, storeItem)
@@ -344,13 +229,6 @@ function AttributeUtils.resolveBaleWrapRound(element, vehicle, storeItem)
         textElement:setText(string.format("%s%s-%s%s", math.floor(spec.minDiameter * 100), g_i18n:getText("unit_cmShort"),
             math.floor(spec.maxDiameter * 100), g_i18n:getText("unit_cmShort")))
     end
-    -- local size = BaleWrapper.loadSpecValueBaleSizeRound(storeItem, vehicle)
-    -- if size == nil then
-    --     return
-    -- end
-    -- element:setVisible(true)
-    -- local textElement = element:getDescendantByName("text")
-    -- textElement:setText(size)
 end
 
 function AttributeUtils.resolveBaleWrapSquare(element, vehicle, storeItem)
@@ -368,23 +246,9 @@ function AttributeUtils.resolveBaleWrapSquare(element, vehicle, storeItem)
         textElement:setText(string.format("%s%s-%s%s", math.floor(spec.minLength * 100), g_i18n:getText("unit_cmShort"),
             math.floor(spec.maxLength * 100), g_i18n:getText("unit_cmShort")))
     end
-    -- local size = BaleWrapper.loadSpecValueBaleSizeSquare(storeItem, vehicle)
-    -- if size == nil then
-    --     -- size = InlineWrapper.getSpecValueBaleSizeSquare(storeItem, vehicle)
-    --     -- if size == nil then
-    --     --     return
-    --     -- end
-    --     return
-    -- end
-    -- element:setVisible(true)
-    -- local textElement = element:getDescendantByName("text")
-    -- textElement:setText(size)
 end
 
 function AttributeUtils.resolveCapacity(element, vehicle, storeItem)
-    -- if storeItem.specs == nil or storeItem.specs.capacity == nil then
-    --     return
-    -- end
     local capacity = FillUnit.getSpecValueCapacity(storeItem, vehicle)
     if capacity == nil then
         return
@@ -394,3 +258,55 @@ function AttributeUtils.resolveCapacity(element, vehicle, storeItem)
     local textElement = element:getDescendantByName("text")
     textElement:setText(capacity)
 end
+
+function AttributeUtils.updateFillTypes(element, fruitTemplate, vehicle, storeItem)
+    local fillTypes = FillUnit.getSpecValueFillTypes(storeItem, vehicle)
+    if fillTypes == nil then
+        element:setVisible(false)
+        return
+    end
+    element:setVisible(true)
+    element:getDescendantByName("icon"):setImageSlice(nil, "gui.storeAttribute_crops")
+    local iconsLayoutBox = element.elements[3]
+    local iconsLayout = iconsLayoutBox:getDescendantByName("iconsLayout")
+
+    for i = #iconsLayout.elements, 1, -1 do
+        local child = iconsLayout.elements[i]
+        child = nil
+    end
+
+    local x = 0
+    for _, fillTypeId in pairs(fillTypes) do
+        local fillType = g_fillTypeManager.indexToFillType[fillTypeId]
+        local image = fillType.hudOverlayFilename
+        local fruitElement = fruitTemplate:clone(iconsLayout)
+        fruitElement:setVisible(true)
+        fruitElement:setImageFilename(image)
+        x = x + fruitElement.size[1]
+    end
+    iconsLayout:invalidateLayout()
+    iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
+    --element.sizeStr = "100% 100%"
+    --element:resolveSizeString()
+end
+
+-- Keep this last
+AttributeUtils.PROFILES = {
+    { profile = "shopListAttributeIconOperatingHours",            resolver = AttributeUtils.resolveOperatingHours },
+    { profile = "shopListAttributeIconPower",                     resolver = AttributeUtils.resolvePower },
+    { profile = "shopListAttributeIconCapacity",                  resolver = AttributeUtils.resolveCapacity },
+    { profile = "shopListAttributeIconTransmission",              resolver = AttributeUtils.resolveTransmission },
+    { profile = "shopListAttributeIconFuel",                      resolver = AttributeUtils.resolveFuel },
+    { profile = "shopListAttributeIconWorkSpeed",                 resolver = AttributeUtils.resolveWorkSpeed },
+    { profile = "shopListAttributeIconWeight",                    resolver = AttributeUtils.resolveWeight },
+    { profile = "shopListAttributeIconPowerReq",                  resolver = AttributeUtils.resolvePowerReq },
+    { profile = "shopListAttributeIconWheels",                    resolver = AttributeUtils.resolveWheels },
+    { profile = "shopListAttributeIconBaleSizeRound",             resolver = AttributeUtils.resolveBaleSizeRound },
+    { profile = "shopListAttributeIconBaleSizeSquare",            resolver = AttributeUtils.resolveBaleSizeSquare },
+    { profile = "shopListAttributeIconBaleWrapperBaleSizeRound",  resolver = AttributeUtils.resolveBaleWrapRound },
+    { profile = "shopListAttributeIconBaleWrapperBaleSizeSquare", resolver = AttributeUtils.resolveBaleWrapSquare },
+    { profile = "shopListAttributeIconLicensePlate",              resolver = AttributeUtils.resolveLicensePlate },
+    { profile = "shopListAttributeIconLifeTime",                  resolver = AttributeUtils.resolveLifeTime },
+    { profile = "shopListAttributeIconWorkingWidth",              resolver = AttributeUtils.resolveWorkWidth },
+    { profile = "shopListAttributeIconCondition",                 resolver = AttributeUtils.resolveCondition }
+}

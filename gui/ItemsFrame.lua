@@ -43,6 +43,8 @@ function ItemsFrame:setTemplates()
     self.detailTemplate:setVisible(false)
     self.valueTemplate:setVisible(false)
     self.fillTypesTemplate:setVisible(false)
+    AttributeUtils.seedCache(self.elementCache, self.detailTemplate, self.attributesLayout)
+    self.fillTypes = self.fillTypesTemplate:clone(self.attributesLayout)
 end
 
 function ItemsFrame:delete()
@@ -134,8 +136,8 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
         element:setVisible(false)
     end
 
-    AttributeUtils.createAttributeElements(self.elementCache, self.detailTemplate, self.attributesLayout, item,
-        storeItem)
+    AttributeUtils.createAttributeElements(self.elementCache, item, storeItem)
+    AttributeUtils.updateFillTypes(self.fillTypes, self.fruitIconTemplate, item, storeItem)
 
     self.attributesLayout:invalidateLayout()
 
