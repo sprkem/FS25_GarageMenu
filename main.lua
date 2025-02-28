@@ -19,8 +19,6 @@ source(GarageMenu.dir .. "gui/MenuGarageMenu.lua")
 source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 
 function GarageMenu:loadMap()
-    g_gui:loadProfiles(GarageMenu.dir .. "gui/guiProfiles.xml")
-
     self.garagePage = MenuGarageMenu.new()
     g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "garageFrame", self.garagePage, false)
     self.garagePage:initialize()
