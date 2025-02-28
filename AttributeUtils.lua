@@ -16,8 +16,6 @@ function AttributeUtils.seedCache(cache, template, parent)
 end
 
 function AttributeUtils.createAttributeElements(cache, vehicle, storeItem)
-    --shopListAttributeIconOutput
-    --shopListAttributeIconSeeds
     for _, value in pairs(AttributeUtils.PROFILES) do
         local profile = value.profile
         local resolver = value.resolver
@@ -117,7 +115,6 @@ function AttributeUtils.resolveWorkWidth(element, vehicle, storeItem)
 
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
-    -- textElement:setText(string.format("%.1f %s", workingWidth, g_i18n:getText("unit_mShort")))
     textElement:setText(workingWidth)
 end
 
@@ -263,22 +260,18 @@ function AttributeUtils.updateFillTypes(element, fruitTemplate, vehicle, storeIt
     local iconsLayoutBox = element.elements[3]
     local iconsLayout = iconsLayoutBox:getDescendantByName("iconsLayout")
 
-    for i = #iconsLayout.elements, 1, -1 do
-        local child = iconsLayout.elements[i]
-        child = nil
-    end
+    iconsLayout.elements = {}
 
-    local x = 0
     for _, fillTypeId in pairs(fillTypes) do
         local fillType = g_fillTypeManager.indexToFillType[fillTypeId]
         local image = fillType.hudOverlayFilename
         local fruitElement = fruitTemplate:clone(iconsLayout)
         fruitElement:setVisible(true)
         fruitElement:setImageFilename(image)
-        x = x + fruitElement.size[1]
     end
+    iconsLayoutBox.sizeStr = "100% 100%"
+    iconsLayoutBox:resolveSizeString()
     iconsLayout:invalidateLayout()
-    iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
 end
 
 function AttributeUtils.updateSeedingTypes(element, fruitTemplate, vehicle, storeItem)
@@ -292,41 +285,37 @@ function AttributeUtils.updateSeedingTypes(element, fruitTemplate, vehicle, stor
     local iconsLayoutBox = element.elements[3]
     local iconsLayout = iconsLayoutBox:getDescendantByName("iconsLayout")
 
-    for i = #iconsLayout.elements, 1, -1 do
-        local child = iconsLayout.elements[i]
-        child = nil
-    end
+    iconsLayout.elements = {}
 
-    local x = 0
     for _, fillTypeId in pairs(fillTypes) do
         local fillType = g_fillTypeManager.indexToFillType[fillTypeId]
         local image = fillType.hudOverlayFilename
         local fruitElement = fruitTemplate:clone(iconsLayout)
         fruitElement:setVisible(true)
         fruitElement:setImageFilename(image)
-        x = x + fruitElement.size[1]
     end
+    iconsLayoutBox.sizeStr = "100% 100%"
+    iconsLayoutBox:resolveSizeString()
     iconsLayout:invalidateLayout()
-    iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
 end
 
 -- Keep this last
 AttributeUtils.PROFILES = {
-    { profile = "shopListAttributeIconOperatingHours",            resolver = AttributeUtils.resolveOperatingHours },
-    { profile = "shopListAttributeIconPower",                     resolver = AttributeUtils.resolvePower },
-    { profile = "shopListAttributeIconCapacity",                  resolver = AttributeUtils.resolveCapacity },
-    { profile = "shopListAttributeIconTransmission",              resolver = AttributeUtils.resolveTransmission },
-    { profile = "shopListAttributeIconFuel",                      resolver = AttributeUtils.resolveFuel },
-    { profile = "shopListAttributeIconWorkSpeed",                 resolver = AttributeUtils.resolveWorkSpeed },
-    { profile = "shopListAttributeIconWeight",                    resolver = AttributeUtils.resolveWeight },
-    { profile = "shopListAttributeIconPowerReq",                  resolver = AttributeUtils.resolvePowerReq },
-    { profile = "shopListAttributeIconWheels",                    resolver = AttributeUtils.resolveWheels },
-    { profile = "shopListAttributeIconBaleSizeRound",             resolver = AttributeUtils.resolveBaleSizeRound },
-    { profile = "shopListAttributeIconBaleSizeSquare",            resolver = AttributeUtils.resolveBaleSizeSquare },
-    { profile = "shopListAttributeIconBaleWrapperBaleSizeRound",  resolver = AttributeUtils.resolveBaleWrapRound },
+    { profile = "shopListAttributeIconOperatingHours", resolver = AttributeUtils.resolveOperatingHours },
+    { profile = "shopListAttributeIconPower", resolver = AttributeUtils.resolvePower },
+    { profile = "shopListAttributeIconCapacity", resolver = AttributeUtils.resolveCapacity },
+    { profile = "shopListAttributeIconTransmission", resolver = AttributeUtils.resolveTransmission },
+    { profile = "shopListAttributeIconFuel", resolver = AttributeUtils.resolveFuel },
+    { profile = "shopListAttributeIconWorkSpeed", resolver = AttributeUtils.resolveWorkSpeed },
+    { profile = "shopListAttributeIconWeight", resolver = AttributeUtils.resolveWeight },
+    { profile = "shopListAttributeIconPowerReq", resolver = AttributeUtils.resolvePowerReq },
+    { profile = "shopListAttributeIconWheels", resolver = AttributeUtils.resolveWheels },
+    { profile = "shopListAttributeIconBaleSizeRound", resolver = AttributeUtils.resolveBaleSizeRound },
+    { profile = "shopListAttributeIconBaleSizeSquare", resolver = AttributeUtils.resolveBaleSizeSquare },
+    { profile = "shopListAttributeIconBaleWrapperBaleSizeRound", resolver = AttributeUtils.resolveBaleWrapRound },
     { profile = "shopListAttributeIconBaleWrapperBaleSizeSquare", resolver = AttributeUtils.resolveBaleWrapSquare },
-    { profile = "shopListAttributeIconLicensePlate",              resolver = AttributeUtils.resolveLicensePlate },
-    { profile = "shopListAttributeIconLifeTime",                  resolver = AttributeUtils.resolveLifeTime },
-    { profile = "shopListAttributeIconWorkingWidth",              resolver = AttributeUtils.resolveWorkWidth },
-    { profile = "shopListAttributeIconCondition",                 resolver = AttributeUtils.resolveCondition }
+    { profile = "shopListAttributeIconLicensePlate", resolver = AttributeUtils.resolveLicensePlate },
+    { profile = "shopListAttributeIconLifeTime", resolver = AttributeUtils.resolveLifeTime },
+    { profile = "shopListAttributeIconWorkingWidth", resolver = AttributeUtils.resolveWorkWidth },
+    { profile = "shopListAttributeIconCondition", resolver = AttributeUtils.resolveCondition }
 }

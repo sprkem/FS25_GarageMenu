@@ -120,7 +120,6 @@ function MenuGarageMenu:initialize()
 end
 
 function MenuGarageMenu:onFrameOpen()
-    print("MenuGarageMenu:onFrameOpen")
     MenuGarageMenu:superClass().onFrameOpen(self)
     g_messageCenter:subscribe(SellVehicleEvent, self.updateContent, self)
     self:setMenuButtonInfoDirty()
@@ -129,7 +128,6 @@ function MenuGarageMenu:onFrameOpen()
 end
 
 function MenuGarageMenu:onFrameClose()
-    print("MenuGarageMenu:onFrameClose")
     MenuGarageMenu:superClass().onFrameClose(self)
     g_messageCenter:unsubscribeAll(self)
 end

@@ -71,8 +71,6 @@ function ItemsFrame:onFrameOpen()
     self.detailBox:setVisible(true)
     self.itemDetailsMap:setIngameMap(g_currentMission.hud:getIngameMap())
     ItemsFrame:superClass().onFrameOpen(self)
-    -- Need to refresh buttons on load as with pushDetails we get shop defaults instead otherwise
-    --self:setMenuButtonInfoDirty()
 end
 
 function ItemsFrame:onFrameClose()
