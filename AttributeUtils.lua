@@ -281,6 +281,35 @@ function AttributeUtils.updateFillTypes(element, fruitTemplate, vehicle, storeIt
     iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
 end
 
+function AttributeUtils.updateSeedingTypes(element, fruitTemplate, vehicle, storeItem)
+    local fillTypes = SowingMachine.getSpecValueSeedFillTypes(storeItem, vehicle)
+    if fillTypes == nil then
+        element:setVisible(false)
+        return
+    end
+    element:setVisible(true)
+    element:getDescendantByName("icon"):setImageSlice(nil, "gui.storeAttribute_seeding")
+    local iconsLayoutBox = element.elements[3]
+    local iconsLayout = iconsLayoutBox:getDescendantByName("iconsLayout")
+
+    for i = #iconsLayout.elements, 1, -1 do
+        local child = iconsLayout.elements[i]
+        child = nil
+    end
+
+    local x = 0
+    for _, fillTypeId in pairs(fillTypes) do
+        local fillType = g_fillTypeManager.indexToFillType[fillTypeId]
+        local image = fillType.hudOverlayFilename
+        local fruitElement = fruitTemplate:clone(iconsLayout)
+        fruitElement:setVisible(true)
+        fruitElement:setImageFilename(image)
+        x = x + fruitElement.size[1]
+    end
+    iconsLayout:invalidateLayout()
+    iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
+end
+
 -- Keep this last
 AttributeUtils.PROFILES = {
     { profile = "shopListAttributeIconOperatingHours",            resolver = AttributeUtils.resolveOperatingHours },

@@ -6,8 +6,8 @@
                 <Bitmap profile="fs25_menuHeaderIcon" id="itemsHeaderIcon"/>
             </Bitmap>
             <Text profile="fs25_menuHeaderTitle" id="itemsHeaderText"/>
-        </GuiElement>        
-        <GuiElement profile="fs25_shopItemsListContainer">
+        </GuiElement>
+        <GuiElement profile="fs25_shopItemsListContainer" absoluteSizeOffset="0px 255px">
             <SmoothList profile="fs25_shopItemsList" id="itemsList" onDoubleClick="showSellSelected" startClipperElementName="startClipper" listSectionHeader="section">
                 <ListItem profile="fs25_shopItemsListItem">
                     <Bitmap profile="fs25_shopItemsListItemBackground"/>
@@ -28,15 +28,15 @@
             <Bitmap profile="fs25_startClipper" name="startClipper" position="-2px 0px"/>
             <Bitmap profile="fs25_stopClipper" name="stopClipper" position="-2px 0px"/>
         </GuiElement>
-        <GuiElement profile="fs25_shopItemsDetailsContainer" id="detailBox">
-                <Bitmap profile="fs25_stopClipper" name="startClipper" position="-2px 215px"/>
-                <Bitmap profile="fs25_vehiclesDetailsImageBg" size="250px 200px" position="00px 10px">
-                    <Bitmap profile="fs25_vehiclesDetailsImage" id="itemDetailsImage" position="0px 20px"/>
+        <GuiElement profile="fs25_shopItemsDetailsContainer" id="detailBox" height="255px">
+                <!-- <Bitmap profile="fs25_stopClipper" name="startClipper" position="-2px 215px"/> -->
+                <Bitmap profile="fs25_vehiclesDetailsImageBg" position="0px 0px">
+                    <Bitmap profile="fs25_vehiclesDetailsImage" id="itemDetailsImage" />
                 </Bitmap>
-                <InGameMapPreview profile="fs25_vehiclesIngameMap" id="itemDetailsMap" size="175px 175px" position="250px 20px" />
-                <Text profile="fs25_vehiclesDetailsName" id="itemDetailsName"/>
+                <InGameMapPreview profile="fs25_vehiclesIngameMap" id="itemDetailsMap" position="270px 12px" />
+                <Text profile="fs25_vehiclesDetailsName" id="itemDetailsName" position="530px -20px"/>
                 <Bitmap profile="fs25_itemDetailsFruitIcon" id="fruitIconTemplate" visible="false"/>
-                <BoxLayout profile="fs25_vehiclesDetailsInfoBox" id="attributesLayout">
+                <BoxLayout profile="fs25_vehiclesDetailsInfoBox" id="attributesLayout" position="530px -55px">
                     <GuiElement profile="fs25_itemDetailsTemplateBox" name="detailTemplate">
                         <Bitmap profile="fs25_itemDetailsIcon" name="icon"/>
                         <Text profile="fs25_itemDetailsText" text="Default" name="text" textAutoWidth="true"/>

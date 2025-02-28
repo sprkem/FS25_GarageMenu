@@ -45,6 +45,7 @@ function ItemsFrame:setTemplates()
     self.fillTypesTemplate:setVisible(false)
     AttributeUtils.seedCache(self.elementCache, self.detailTemplate, self.attributesLayout)
     self.fillTypes = self.fillTypesTemplate:clone(self.attributesLayout)
+    self.seedingTypes = self.fillTypesTemplate:clone(self.attributesLayout)
 end
 
 function ItemsFrame:delete()
@@ -73,16 +74,23 @@ function ItemsFrame:onFrameOpen()
     ItemsFrame:superClass().onFrameOpen(self)
     -- Need to refresh buttons on load as with pushDetails we get shop defaults instead otherwise
     self:setMenuButtonInfoDirty()
-    self:updateContent()
+    -- self.itemsList.selectedIndex = 1
+    -- self:updateContent()
+    -- g_messageCenter:subscribe(SellVehicleEvent, self.onSellVehicleEvent, self)
 end
 
 function ItemsFrame:onFrameClose()
-    ItemsFrame:superClass().onFrameClose(self)
     self.itemsList.selectedIndex = 1
+    ItemsFrame:superClass().onFrameClose(self)
+    -- g_messageCenter:unsubscribeAll(self)
 end
 
 function ItemsFrame:setDisplayItems(items)
     self.items = items
+    if self.items == nil then
+        return
+    end
+    self.itemsList:reloadData()
 end
 
 function ItemsFrame:setCategory(categoryDisplayName, categoryName)
@@ -91,12 +99,12 @@ function ItemsFrame:setCategory(categoryDisplayName, categoryName)
     self.itemsHeaderText:setText(categoryDisplayName)
 end
 
-function ItemsFrame:updateContent()
-    if self.items == nil then
-        return
-    end
-    self.itemsList:reloadData()
-end
+-- function ItemsFrame:updateContent()
+--     if self.items == nil then
+--         return
+--     end
+--     self.itemsList:reloadData()
+-- end
 
 function ItemsFrame:getNumberOfSections()
     return 1
@@ -138,6 +146,7 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
 
     AttributeUtils.createAttributeElements(self.elementCache, item, storeItem)
     AttributeUtils.updateFillTypes(self.fillTypes, self.fruitIconTemplate, item, storeItem)
+    AttributeUtils.updateSeedingTypes(self.seedingTypes, self.fruitIconTemplate, item, storeItem)
 
     self.attributesLayout:invalidateLayout()
 
@@ -163,7 +172,9 @@ function ItemsFrame:showSellSelected()
         function(self, clickOk)
             if clickOk then
                 g_client:getServerConnection():sendEvent(SellVehicleEvent.new(item, 1, true))
-                self:updateContent()
+                InfoDialog.show(g_i18n:getText("ui_sold"))
+                local garagePage = g_currentMission.garageMenu.garagePage
+                g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(garagePage))
             end
         end, self,
         g_i18n:getText("garage_menu_confirm_sell"))

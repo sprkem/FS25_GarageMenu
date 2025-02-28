@@ -113,22 +113,20 @@ function MenuGarageMenu:initialize()
 end
 
 function MenuGarageMenu:onFrameOpen()
+    print("MenuGarageMenu:onFrameOpen")
     MenuGarageMenu:superClass().onFrameOpen(self)
+    g_messageCenter:subscribe(SellVehicleEvent, self.updateContent, self)
     self:setMenuButtonInfoDirty()
     self:updateContent()
 end
 
 function MenuGarageMenu:onFrameClose()
+    print("MenuGarageMenu:onFrameClose")
     MenuGarageMenu:superClass().onFrameClose(self)
+    g_messageCenter:unsubscribeAll(self)
 end
 
 function MenuGarageMenu:updateContent()
-    -- local inGameMenu = g_gui.screenControllers[ShopMenu]
-    --     local shopXml = inGameMenu.xmlFilename
-    -- local frameXml = "dataS/gui/ShopCategoriesFrame.xml"
-    -- local xmlFile = loadXMLFile("Temp", frameXml)
-    -- saveXMLFileTo(xmlFile, g_currentMission.missionInfo.savegameDirectory .. "/ShopCategoriesFrame.xml")
-
     if self.sectionData == nil then
         self:setSectionData()
     end
@@ -155,16 +153,14 @@ function MenuGarageMenu:updateContent()
                 }
             end
 
-            if dataByCategory[mapEntry.sectionID].categories[mapEntry.sortValue] == nil then
-                dataByCategory[mapEntry.sectionID].categories[mapEntry.sortValue] = {
+            local categoryIndex = mapEntry.sortValue + 1
+            if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+                dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
                     categoryName = itemCacheEntry.categoryName,
                     iconFilename = mapEntry.imageFilename,
                     label = mapEntry.label,
-                    items = {}
                 }
             end
-
-            table.insert(dataByCategory[mapEntry.sectionID].categories[mapEntry.sortValue].items, vehicle)
         end
     end
 
@@ -218,8 +214,25 @@ function MenuGarageMenu:onOpenCategory(_, _, _, _)
     local index = self.categoryList.selectedIndex
     local itemsPage = g_currentMission.garageMenu.garageItemsPage
     if section ~= nil and section.categories[index] ~= nil then
-        itemsPage:setDisplayItems(section.categories[index].items)
-        itemsPage:setCategory(section.categories[index].label, section.categories[index].categoryName)
+        local categoryName = section.categories[index].categoryName
+        itemsPage:setDisplayItems(self:getItemsForCategory(categoryName))
+        itemsPage:setCategory(section.categories[index].label, categoryName)
         g_shopMenu:pushDetail(itemsPage)
     end
+end
+
+function MenuGarageMenu:getItemsForCategory(categoryName)
+    local currentFarmId = self:getCurrentFarmId()
+    local items = {}
+    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
+        if vehicle.ownerFarmId == currentFarmId then
+            local xmlFileName = vehicle.xmlFile.filename
+            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+            local itemCacheEntry = self.itemCache[xmlFileName]
+            if itemCacheEntry.categoryName == categoryName then
+                table.insert(items, vehicle)
+            end
+        end
+    end
+    return items
 end
