@@ -47,20 +47,13 @@ function AttributeUtils.resolveOperatingHours(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolvePower(element, vehicle, storeItem)
-    if vehicle.boughtConfigurations == nil or vehicle.boughtConfigurations.motor == nil then
+    local power = Motorized.getSpecValuePower(storeItem, vehicle)
+    if power == nil then
         return
     end
-
-    local boughtMotor = vehicle.configurations.motor
-    local motorPower  = storeItem.configurations.motor[boughtMotor].power
-    if motorPower == nil then return end
-
     element:setVisible(true)
-
-    local hp, _ = g_i18n:getPower(motorPower)
-
     local textElement = element:getDescendantByName("text")
-    textElement:setText(string.format(g_i18n:getText("shop_maxPowerValueSingle"), math.floor(hp)))
+    textElement:setText(power)
 end
 
 function AttributeUtils.resolveLicensePlate(element, vehicle, storeItem)
@@ -74,7 +67,7 @@ function AttributeUtils.resolveLicensePlate(element, vehicle, storeItem)
 end
 
 function AttributeUtils.resolvePowerReq(element, vehicle, storeItem)
-    local power = Motorized.getSpecValuePower(storeItem, vehicle)
+    local power = PowerConsumer.getSpecValueNeededPower(storeItem, vehicle)
     if power == nil then
         return
     end
@@ -286,8 +279,6 @@ function AttributeUtils.updateFillTypes(element, fruitTemplate, vehicle, storeIt
     end
     iconsLayout:invalidateLayout()
     iconsLayoutBox:setSize(x, iconsLayoutBox.size[2])
-    --element.sizeStr = "100% 100%"
-    --element:resolveSizeString()
 end
 
 -- Keep this last
