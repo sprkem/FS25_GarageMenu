@@ -2,7 +2,7 @@
 -- FS25 - GarageMenu
 --
 -- @Author: Ozz
--- @Date: 14.02.2025
+-- @Date: 28.02.2025
 -- @Version: 1.0.0.0
 --
 -- Changelog:
@@ -21,67 +21,19 @@ source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 function GarageMenu:loadMap()
     g_gui:loadProfiles(GarageMenu.dir .. "gui/guiProfiles.xml")
 
-    -- -- self.itemCache = {}
-    -- self.brandCache = {}
-    -- self.categoryData = nil
-
-    -- self.garagePage = ShopCategoriesFrame:new()
-    -- g_gui:loadGui("dataS/gui/ShopCategoriesFrame.xml", "garageFrame", self.garagePage, true)
     self.garagePage = MenuGarageMenu.new()
     g_gui:loadGui(GarageMenu.dir .. "gui/MenuGarageMenu.xml", "garageFrame", self.garagePage, false)
     self.garagePage:initialize()
-    -- self.garagePage["onFrameOpen"] = Utils.overwrittenFunction(self.garagePage["onFrameOpen"], GarageMenu.onFrameOpen)
-    -- self:configureGaragePage()
 
     self.garageItemsPage = ItemsFrame.new()
     g_gui:loadGui(GarageMenu.dir .. "gui/ItemsFrame.xml", "garageItemsFrame", self.garageItemsPage, false)
-    g_shopMenu.pagingElement:addElement(self.garageItemsPage)    
+    g_shopMenu.pagingElement:addElement(self.garageItemsPage)
     self.garageItemsPage:initialize()
 
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
-        GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), true, "pageUsedSale")
+        GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), "pageUsedSale")
 
     g_currentMission.garageMenu = self
-end
-
-function GarageMenu:getCurrentFarmId()
-    local currentFarmId = -1
-    local farm = g_farmManager:getFarmByUserId(g_currentMission.playerUserId)
-    if farm ~= nil then
-        return farm.farmId
-    end
-    return currentFarmId -- Not sure can happen!
-end
-
-function GarageMenu.onClickItemCategory(categoryName, screenTitle, categoryDisplayName, baseCategoryIconUVs)
-    local self = g_currentMission.garageMenu
-    -- local categoryItems = g_shopController:getItemsByCategory(categoryName)
-    -- local currentDisplayItems = categoryItems
-
-    -- if self.state ~= 0 then
-    local displayItems = {}
-    local currentFarmId = self:getCurrentFarmId()
-    local owned = g_currentMission.vehicleSystem.vehicles
-    for _, item in owned do
-        if item.ownerFarmId == currentFarmId then
-            local xmlFileName = item.xmlFile.filename
-            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
-
-            -- local itemCacheEntry = self.itemCache[xmlFileName]
-            local itemCategoryName = self.itemCache[xmlFileName].categoryName
-
-            -- local mapEntry = self.categoryData[itemCacheEntry.categoryName]
-            if itemCategoryName == categoryName then
-                -- local x, _, z = getTranslation(item.rootNode)
-                table.insert(displayItems, item)
-            end
-        end
-    end
-
-    self.garageItemsPage:setDisplayItems(displayItems)
-
-    self.garageItemsPage:setCategory(baseCategoryIconUVs, categoryDisplayName, categoryName)
-    g_shopMenu:pushDetail(self.garageItemsPage)
 end
 
 function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()
@@ -89,8 +41,7 @@ function GarageMenu:makeIsGarageMenuCheckEnabledPredicate()
 end
 
 -- from Courseplay
-function GarageMenu.addShopPage(frame, pageName, uvs, predicateFunc, addTab, insertAfter)
-    -- local inGameMenu = g_shopMenu
+function GarageMenu.addShopPage(frame, pageName, uvs, predicateFunc, insertAfter)
     local targetPosition = 0
 
     -- remove all to avoid warnings
@@ -134,10 +85,8 @@ function GarageMenu.addShopPage(frame, pageName, uvs, predicateFunc, addTab, ins
 
     g_shopMenu:registerPage(g_shopMenu[pageName], nil, predicateFunc)
 
-    if addTab == true then
-        local iconFileName = Utils.getFilename('images/menuIcon.dds', GarageMenu.dir)
-        g_shopMenu:addPageTab(g_shopMenu[pageName], iconFileName, GuiUtils.getUVs(uvs))
-    end
+    local iconFileName = Utils.getFilename('images/menuIcon.dds', GarageMenu.dir)
+    g_shopMenu:addPageTab(g_shopMenu[pageName], iconFileName, GuiUtils.getUVs(uvs))
 
     for i = 1, #g_shopMenu.pageFrames do
         local child = g_shopMenu.pageFrames[i]

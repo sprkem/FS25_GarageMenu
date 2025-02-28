@@ -244,9 +244,6 @@ function MenuGarageMenu:onOpenCategory(_, _, _, _)
     local itemsPage = g_currentMission.garageMenu.garageItemsPage
     if section ~= nil and section.categories[index] ~= nil then
         local categoryName = section.categories[index].categoryName
-        -- itemsPage:setDisplayItems(self:getItemsForCategory(categoryName))
-        -- itemsPage:setCategory(section.categories[index].label, categoryName)
-
         itemsPage:setContent(self:getItemsForCategory(categoryName), section.categories[index].label, self.propertyState)
         g_shopMenu:pushDetail(itemsPage)
     end

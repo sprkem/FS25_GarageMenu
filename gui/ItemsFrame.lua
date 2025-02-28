@@ -118,21 +118,16 @@ function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
     local storeItem = menuPage.itemCache[item.xmlFile.filename]
     cell:getAttribute("icon"):setImageFilename(storeItem.imageFilename)
     cell:getAttribute("brandIcon"):setImageFilename(item.brand.image)
-    cell:getAttribute("title"):setText(self:getVehicleName(item, storeItem))
+    cell:getAttribute("title"):setText(item:getName())
     cell:getAttribute("value"):setText(g_i18n:formatMoney(item:getSellPrice(), 0, 0, true))
 end
 
 function ItemsFrame:onListSelectionChanged(list, section, index)
-    -- for key,value in pairs(getmetatable(g_i18n)) do
-    --     print(key, value)
-    -- end
-
     local menuPage = g_currentMission.garageMenu.garagePage
-    -- TODO - update details panel
     local item = self.items[index]
     local storeItem = menuPage.itemCache[item.xmlFile.filename]
     self.itemDetailsImage:setImageFilename(storeItem.imageFilename)
-    self.itemDetailsName:setText(item.brand.title .. " " .. self:getVehicleName(item, storeItem))
+    self.itemDetailsName:setText(item:getFullName())
 
     for k, element in pairs(self.elementCache) do
         element:setVisible(false)
@@ -146,17 +141,6 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
 
     local x, _, z = getTranslation(item.rootNode)
     self.itemDetailsMap:setCenterToWorldPosition(x, z)
-end
-
-function ItemsFrame:getVehicleName(vehicle, storeItem)
-    local result = storeItem.itemName
-    for configurationName, configIndex in pairs(vehicle.configurations) do
-        local config = storeItem.configurations[configurationName][configIndex]
-        if config.vehicleName ~= nil then
-            result = config.vehicleName
-        end
-    end
-    return result
 end
 
 function ItemsFrame:showSellSelected()
