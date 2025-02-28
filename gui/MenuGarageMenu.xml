@@ -5,8 +5,9 @@
             <Bitmap profile="fs25_menuHeaderIconBg">
                 <Bitmap profile="fs25_menuHeaderIcon" id="categoryHeaderIcon"/>
             </Bitmap>
-            <Text profile="fs25_menuHeaderTitle" id="categoryHeaderText" text="$l10n_garage_menu_header"/>
+            <Text profile="fs25_menuHeaderTitle" id="categoryHeaderText"/>
         </GuiElement>
+        <Text profile="ingameMenuNoContentText" text="$l10n_ui_noShopItems" id="noItemsText" position="-5px 105px"/>
         <SmoothList profile="fs25_shopList" id="categoryList" onDoubleClick="onOpenCategory" listSectionHeader="section" startClipperElementName="startClipper">
             <ListItem profile="fs25_shopListItem" name="category">                
                 <Bitmap profile="fs25_shopListItemBackground"/>
@@ -14,31 +15,9 @@
                 <Text profile="fs25_shopListItemTitle" name="title"/>
                 <Text profile="fs25_shopListItemCategory" text="$l10n_shop_category"/>
             </ListItem>
-            <!-- <ListItem profile="fs25_shopListItem" name="packs">
-                <Bitmap profile="fs25_shopListItemBackground"/>
-                <Bitmap profile="fs25_shopListItemImagePacks" name="icon"/>
-                <Text profile="fs25_shopListItemTitle" name="title"/>
-                <Text profile="fs25_shopListItemCategory" text="$l10n_shop_category"/>
-            </ListItem>
-            <ListItem profile="fs25_shopListItem" name="brand">
-                <Bitmap profile="fs25_shopListItemBrandBackground"/>
-                <Bitmap profile="fs25_shopListItemBrandImage" name="icon"/>
-                <Text profile="fs25_shopListItemBrandTitle" name="title"/>
-            </ListItem>
-            <ListItem profile="fs25_modHubListItem" name="dlc">
-                <Bitmap profile="fs25_modHubListItemBackground"/>
-                <Bitmap profile="fs25_modHubListItemImage" name="icon"/>
-                <Text profile="fs25_modHubListItemTitle" name="title"/>
-            </ListItem> -->
             <ListItem profile="fs25_shopListItem" name="categoryEmpty">
                 <Bitmap profile="fs25_shopListItemBackgroundEmpty"/>
             </ListItem>
-            <!-- <ListItem profile="fs25_shopListItem" name="brandEmpty">
-                <Bitmap profile="fs25_shopListItemBrandBackgroundEmpty"/>
-            </ListItem>
-            <ListItem profile="fs25_modHubListItem" name="dlcEmpty">
-                <Bitmap profile="fs25_modHubListItemBackgroundEmpty"/>
-            </ListItem> -->
             <ListItem profile="fs25_shopListSection" name="section">
                 <Text profile="fs25_shopListSectionTitle" name="title"/>
             </ListItem>
@@ -50,17 +29,4 @@
             <Slider profile="fs25_sliderDocked" dataElementId="categoryList"/>
         </ThreePartBitmap>
     </ThreePartBitmap>
-    <!-- <GUIProfiles>
-        <Profile name="shopCategoryItemCoinBackground" extends="baseReference" with="anchorBottomLeft">
-            <size value="192px 246px"/>
-            <imageUVs value="0 0 1 1"/>
-            <imageFilename value="dataS/menu/iap_background.png"/>
-            <imageColor value="0.9 0.9 0 0.7"/>
-            <imageFocusedColor value="0.9 0.9 0 0.7"/>
-            <imageSelectedColor value="0.9 0.9 0 0.7"/>
-            <Variant name="mobile">
-                <size value="279px 340px"/>
-            </Variant>
-        </Profile>
-    </GUIProfiles> -->
 </GUI>

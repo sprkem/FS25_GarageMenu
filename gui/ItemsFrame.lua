@@ -19,7 +19,7 @@ function ItemsFrame.new()
         text = g_i18n:getText("ui_ingameMenuNext"),
         inputAction = InputAction.MENU_PAGE_NEXT
     }
-    self.btnSell = {
+    self.btnSellOrReturn = {
         text = g_i18n:getText("ui_sellItem"),
         inputAction = InputAction.MENU_ACCEPT,
         callback = function()
@@ -30,7 +30,7 @@ function ItemsFrame.new()
         self.btnBack,
         self.btnNextPage,
         self.btnPreviousPage,
-        self.btnSell
+        self.btnSellOrReturn
     })
 
     return self
@@ -69,42 +69,36 @@ end
 
 function ItemsFrame:onFrameOpen()
     self.detailBox:setVisible(true)
-    --self.itemDetailsMap.ingameMap = g_currentMission.hud:getIngameMap()
     self.itemDetailsMap:setIngameMap(g_currentMission.hud:getIngameMap())
     ItemsFrame:superClass().onFrameOpen(self)
     -- Need to refresh buttons on load as with pushDetails we get shop defaults instead otherwise
-    self:setMenuButtonInfoDirty()
-    -- self.itemsList.selectedIndex = 1
-    -- self:updateContent()
-    -- g_messageCenter:subscribe(SellVehicleEvent, self.onSellVehicleEvent, self)
+    --self:setMenuButtonInfoDirty()
 end
 
 function ItemsFrame:onFrameClose()
     self.itemsList.selectedIndex = 1
     ItemsFrame:superClass().onFrameClose(self)
-    -- g_messageCenter:unsubscribeAll(self)
 end
 
-function ItemsFrame:setDisplayItems(items)
+function ItemsFrame:setContent(items, categoryDisplayName, propertyState)
     self.items = items
     if self.items == nil then
         return
     end
-    self.itemsList:reloadData()
-end
 
-function ItemsFrame:setCategory(categoryDisplayName, categoryName)
-    self.categoryName = categoryName
+    self.propertyState = propertyState
     self.categoryDisplayName = categoryDisplayName
     self.itemsHeaderText:setText(categoryDisplayName)
-end
 
--- function ItemsFrame:updateContent()
---     if self.items == nil then
---         return
---     end
---     self.itemsList:reloadData()
--- end
+    if self.propertyState == VehiclePropertyState.OWNED then
+        self.btnSellOrReturn.text = g_i18n:getText("ui_sellItem")
+
+    else
+        self.btnSellOrReturn.text = g_i18n:getText("ui_returnThis")
+    end
+    self:setMenuButtonInfoDirty()
+    self.itemsList:reloadData()
+end
 
 function ItemsFrame:getNumberOfSections()
     return 1
@@ -168,14 +162,25 @@ end
 function ItemsFrame:showSellSelected()
     local item = self.items[self.itemsList.selectedIndex]
 
+    local label = nil
+    if self.propertyState == VehiclePropertyState.OWNED then
+        label = g_i18n:getText("ui_youWantToSellVehicle")
+    else
+        label = g_i18n:getText("ui_youWantToReturnVehicle")
+    end
+
     YesNoDialog.show(
         function(self, clickOk)
             if clickOk then
                 g_client:getServerConnection():sendEvent(SellVehicleEvent.new(item, 1, true))
-                InfoDialog.show(g_i18n:getText("ui_sold"))
+                if self.propertyState == VehiclePropertyState.OWNED then
+                    InfoDialog.show(g_i18n:getText("shop_messageSoldVehicle"))
+                else
+                    InfoDialog.show(g_i18n:getText("shop_messageReturnedVehicle"))
+                end
                 local garagePage = g_currentMission.garageMenu.garagePage
                 g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(garagePage))
             end
         end, self,
-        g_i18n:getText("garage_menu_confirm_sell"))
+        label)
 end

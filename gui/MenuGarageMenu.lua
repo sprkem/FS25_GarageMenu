@@ -5,7 +5,6 @@ function MenuGarageMenu.new()
     local self = MenuGarageMenu:superClass().new(nil, MenuGarageMenu._mt)
     self.name = "menuGarageMenu"
 
-    self.categoryHeaderText = g_i18n:getText("shop_ownedItems")
     self.dataBindings = {}
     self.itemCache = {}
     self.categories = nil
@@ -22,6 +21,13 @@ function MenuGarageMenu.new()
         text = g_i18n:getText("ui_ingameMenuNext"),
         inputAction = InputAction.MENU_PAGE_NEXT
     }
+    self.btnToggleView = {
+        text = g_i18n:getText("ui_switchMode"),
+        inputAction = InputAction.MENU_EXTRA_1,
+        callback = function()
+            self:toggleView()
+        end
+    }
     self.btnSelectCategory = {
         text = g_i18n:getText("button_select"),
         inputAction = InputAction.MENU_ACCEPT,
@@ -33,7 +39,8 @@ function MenuGarageMenu.new()
         self.btnBack,
         self.btnNextPage,
         self.btnPreviousPage,
-        self.btnSelectCategory
+        self.btnSelectCategory,
+        self.btnToggleView
     })
 
     return self
@@ -117,6 +124,7 @@ function MenuGarageMenu:onFrameOpen()
     MenuGarageMenu:superClass().onFrameOpen(self)
     g_messageCenter:subscribe(SellVehicleEvent, self.updateContent, self)
     self:setMenuButtonInfoDirty()
+    self.propertyState = VehiclePropertyState.OWNED
     self:updateContent()
 end
 
@@ -126,7 +134,22 @@ function MenuGarageMenu:onFrameClose()
     g_messageCenter:unsubscribeAll(self)
 end
 
+function MenuGarageMenu:toggleView()
+    if self.propertyState == VehiclePropertyState.OWNED then
+        self.propertyState = VehiclePropertyState.LEASED
+    else
+        self.propertyState = VehiclePropertyState.OWNED
+    end
+    self:updateContent()
+end
+
 function MenuGarageMenu:updateContent()
+    if self.propertyState == VehiclePropertyState.OWNED then
+        self.categoryHeaderText:setText(g_i18n:getText("shop_ownedItems"))
+    else
+        self.categoryHeaderText:setText(g_i18n:getText("shop_leasedItems"))
+    end
+
     if self.sectionData == nil then
         self:setSectionData()
     end
@@ -139,7 +162,7 @@ function MenuGarageMenu:updateContent()
     local dataByCategory = {}
 
     for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
-        if vehicle.ownerFarmId == currentFarmId then
+        if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
             local xmlFileName = vehicle.xmlFile.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
@@ -181,6 +204,12 @@ function MenuGarageMenu:updateContent()
         end
     end
 
+    if #self.renderData == 0 then
+        self.noItemsText:setVisible(true)
+    else
+        self.noItemsText:setVisible(false)
+    end
+
     self.categoryList:reloadData()
 end
 
@@ -215,8 +244,10 @@ function MenuGarageMenu:onOpenCategory(_, _, _, _)
     local itemsPage = g_currentMission.garageMenu.garageItemsPage
     if section ~= nil and section.categories[index] ~= nil then
         local categoryName = section.categories[index].categoryName
-        itemsPage:setDisplayItems(self:getItemsForCategory(categoryName))
-        itemsPage:setCategory(section.categories[index].label, categoryName)
+        -- itemsPage:setDisplayItems(self:getItemsForCategory(categoryName))
+        -- itemsPage:setCategory(section.categories[index].label, categoryName)
+
+        itemsPage:setContent(self:getItemsForCategory(categoryName), section.categories[index].label, self.propertyState)
         g_shopMenu:pushDetail(itemsPage)
     end
 end
@@ -225,7 +256,7 @@ function MenuGarageMenu:getItemsForCategory(categoryName)
     local currentFarmId = self:getCurrentFarmId()
     local items = {}
     for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
-        if vehicle.ownerFarmId == currentFarmId then
+        if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
             local xmlFileName = vehicle.xmlFile.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
             local itemCacheEntry = self.itemCache[xmlFileName]
