@@ -6,7 +6,7 @@
 -- @Version: 1.0.0.0
 --
 -- Changelog:
---  v1.0.0.0 (TODO):
+--  v1.0.0.0:
 --  - Initial Release
 
 
