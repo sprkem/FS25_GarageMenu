@@ -59,6 +59,10 @@ function AttributeUtils.resolveLicensePlate(element, vehicle, storeItem)
         return
     end
 
+    if vehicle.spec_licensePlates.licensePlateData.characters == nil then
+        return
+    end
+
     element:setVisible(true)
     local textElement = element:getDescendantByName("text")
     textElement:setText(table.concat(vehicle.spec_licensePlates.licensePlateData.characters))
