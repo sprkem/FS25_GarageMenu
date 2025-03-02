@@ -21,7 +21,7 @@
                 <ListItem profile="fs25_shopItemsListItem" name="empty">
                     <Bitmap profile="fs25_shopItemsListItemBackgroundEmpty"/>
                 </ListItem>
-            </SmoothList>a
+            </SmoothList>
             <Bitmap profile="fs25_startClipper" name="startClipper" position="-2px 0px"/>
             <Bitmap profile="fs25_stopClipper" name="stopClipper" position="-2px 0px"/>
         </GuiElement>

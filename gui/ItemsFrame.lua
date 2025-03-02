@@ -7,6 +7,7 @@ function ItemsFrame.new()
 
     self.items = nil
     self.elementCache = {}
+    self.toScroll = {}
 
     self.btnBack = {
         inputAction = InputAction.MENU_BACK
@@ -36,6 +37,26 @@ function ItemsFrame.new()
     return self
 end
 
+function ItemsFrame:update(dt)
+    ItemsFrame:superClass().update(self, dt)
+    self:updateScrollingAnimation(dt)
+end
+
+function ItemsFrame:updateScrollingAnimation(dt)
+    for k, v in pairs(self.toScroll) do
+        local x = k.absSize[1]
+        local parentX = k.parent.absSize[1]
+        local difference = x - parentX
+        local speed = 5000 * (x / parentX)
+        local next = v + dt
+        if speed <= next then
+            next = -speed
+        end
+        k:setPosition(-(difference * MathUtil.smoothstep(0.1, 0.9, math.abs(next) / speed)))
+        self.toScroll[k] = next
+    end
+end
+
 function ItemsFrame:setTemplates()
     self.detailTemplate = self.attributesLayout:getDescendantByName("detailTemplate")
     self.valueTemplate = self.attributesLayout:getDescendantByName("valueTemplate")
@@ -43,9 +64,6 @@ function ItemsFrame:setTemplates()
     self.detailTemplate:setVisible(false)
     self.valueTemplate:setVisible(false)
     self.fillTypesTemplate:setVisible(false)
-    AttributeUtils.seedCache(self.elementCache, self.detailTemplate, self.attributesLayout)
-    self.fillTypes = self.fillTypesTemplate:clone(self.attributesLayout)
-    self.seedingTypes = self.fillTypesTemplate:clone(self.attributesLayout)
 end
 
 function ItemsFrame:delete()
@@ -90,7 +108,6 @@ function ItemsFrame:setContent(items, categoryDisplayName, propertyState)
 
     if self.propertyState == VehiclePropertyState.OWNED then
         self.btnSellOrReturn.text = g_i18n:getText("ui_sellItem")
-
     else
         self.btnSellOrReturn.text = g_i18n:getText("ui_returnThis")
     end
@@ -122,23 +139,97 @@ end
 
 function ItemsFrame:onListSelectionChanged(list, section, index)
     local menuPage = g_currentMission.garageMenu.garagePage
-    local item = self.items[index]
-    local storeItem = menuPage.itemCache[item.xmlFile.filename]
+    local vehicle = self.items[index]
+    local storeItem = menuPage.itemCache[vehicle.xmlFile.filename]
     self.itemDetailsImage:setImageFilename(storeItem.imageFilename)
-    self.itemDetailsName:setText(item:getFullName())
+    self.itemDetailsName:setText(vehicle:getFullName())
 
     for k, element in pairs(self.elementCache) do
         element:setVisible(false)
     end
 
-    AttributeUtils.createAttributeElements(self.elementCache, item, storeItem)
-    AttributeUtils.updateFillTypes(self.fillTypes, self.fruitIconTemplate, item, storeItem)
-    AttributeUtils.updateSeedingTypes(self.seedingTypes, self.fruitIconTemplate, item, storeItem)
+    for k, _ in pairs(self.toScroll) do
+        self.toScroll[k] = nil
+    end
+
+    for k, v in pairs(self.elementCache) do
+        v:delete()
+        self.elementCache[k] = nil
+    end
+
+    local item = g_storeManager:getItemByXMLFilename(vehicle.configFileName)
+    local displayItem = g_shopController:makeDisplayItem(item, vehicle, vehicle.configurations)
+
+    self:displayAttributes(displayItem)
+    local fillTypes = FillUnit.getSpecValueFillTypes(storeItem, vehicle)
+    local seedFillTypes = SowingMachine.getSpecValueSeedFillTypes(storeItem, vehicle)
+
+    self:updateFillTypes(self.fruitIconTemplate, fillTypes, "gui.storeAttribute_crops")
+    self:updateFillTypes(self.fruitIconTemplate, seedFillTypes, "gui.storeAttribute_seeding")
 
     self.attributesLayout:invalidateLayout()
 
-    local x, _, z = getTranslation(item.rootNode)
+    local x, _, z = getTranslation(vehicle.rootNode)
     self.itemDetailsMap:setCenterToWorldPosition(x, z)
+    self.itemDetailsMap:setMapZoom(7)
+    self.itemDetailsMap:setMapAlpha(1)
+end
+
+function ItemsFrame:displayAttributes(displayItem)
+    for k, profile in displayItem.attributeIconProfiles do
+        local element = self.detailTemplate:clone(self.attributesLayout)
+        table.insert(self.elementCache, element)
+
+        local iconElement = element:getDescendantByName("icon")
+        iconElement:applyProfile(profile)
+        local textElement = element:getDescendantByName("text")
+        textElement:setText(displayItem.attributeValues[k])
+        element:setVisible(true)
+        element:setSize(textElement.size[1] + iconElement.size[1] + 0.0025, textElement.size[2])
+    end
+end
+
+function ItemsFrame:updateFillTypes(template, fillTypes, slice)
+    if fillTypes == nil then
+        return
+    end
+
+    local element = self.fillTypesTemplate:clone(self.attributesLayout)
+    table.insert(self.elementCache, element)
+
+    element:setVisible(true)
+    local iconsLayoutBox = element.elements[3]
+
+    local icon = element:getDescendantByName("icon")
+    local iconsLayout = iconsLayoutBox:getDescendantByName("iconsLayout")
+    icon:setImageSlice(nil, slice)
+
+    iconsLayout.elements = {}
+
+    local cumulSize = 0
+    for _, fillTypeId in pairs(fillTypes) do
+        local fillType = g_fillTypeManager.indexToFillType[fillTypeId]
+        local image = fillType.hudOverlayFilename
+        local fruitElement = template:clone(iconsLayout)
+        fruitElement:setVisible(true)
+        fruitElement:setImageFilename(image)
+        cumulSize = cumulSize + fruitElement.absSize[1] + fruitElement.margin[1] + fruitElement.margin[3]
+    end
+
+    local toFit = self.attributesLayout.absSize[1] * 0.91
+    local space = math.min(toFit, cumulSize)
+    local availableSpace = space + icon.absSize[1] + icon.margin[1]
+
+    iconsLayout:setSize(cumulSize, nil)
+    iconsLayout:setPosition(0, nil)
+    iconsLayout.parent:setSize(space, nil)
+
+    iconsLayout:invalidateLayout()
+    if availableSpace < cumulSize then
+        self.toScroll[iconsLayout] = 0
+        return
+    end
+    self.toScroll[iconsLayout] = nil
 end
 
 function ItemsFrame:showSellSelected()

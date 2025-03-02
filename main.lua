@@ -14,7 +14,6 @@ GarageMenu = {}
 GarageMenu.dir = g_currentModDirectory
 GarageMenu.modName = g_currentModName
 
-source(GarageMenu.dir .. "AttributeUtils.lua")
 source(GarageMenu.dir .. "gui/MenuGarageMenu.lua")
 source(GarageMenu.dir .. "gui/ItemsFrame.lua")
 
