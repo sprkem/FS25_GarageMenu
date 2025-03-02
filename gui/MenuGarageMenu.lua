@@ -73,7 +73,6 @@ function MenuGarageMenu:setCategoryData()
         for _, category in pairs(entries) do
             self.categoryData[category.id] = {
                 sectionID = sectionID,
-                iconFilename = category.iconFilename,
                 label = category.label,
                 sortValue = category.sortValue
             }
@@ -164,8 +163,8 @@ function MenuGarageMenu:updateContent()
             local xmlFileName = vehicle.xmlFile.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
 
-            local itemCacheEntry = self.itemCache[xmlFileName]
-            local mapEntry = self.categoryData[itemCacheEntry.categoryName]
+            local storeItem = self.itemCache[xmlFileName]
+            local mapEntry = self.categoryData[storeItem.categoryName]
 
             if dataByCategory[mapEntry.sectionID] == nil then
                 dataByCategory[mapEntry.sectionID] = {
@@ -177,9 +176,9 @@ function MenuGarageMenu:updateContent()
             local categoryIndex = mapEntry.sortValue + 1
             if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
                 dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                    categoryName = itemCacheEntry.categoryName,
-                    iconFilename = mapEntry.imageFilename,
+                    categoryName = storeItem.categoryName,                    
                     label = mapEntry.label,
+                    imageFilename = storeItem.imageFilename
                 }
             end
         end
@@ -232,7 +231,7 @@ end
 function MenuGarageMenu:populateCellForItemInSection(list, section, index, cell)
     local category = self.renderData[section].categories[index]
     local categoryInfo = self.categoryData[category.categoryName]
-    cell:getAttribute("icon"):setImageFilename(categoryInfo.iconFilename)
+    cell:getAttribute("icon"):setImageFilename(category.imageFilename)
     cell:getAttribute("title"):setText(categoryInfo.label)
 end
 
