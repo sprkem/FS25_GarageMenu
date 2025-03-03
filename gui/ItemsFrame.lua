@@ -22,15 +22,31 @@ function ItemsFrame.new()
     }
     self.btnSellOrReturn = {
         text = g_i18n:getText("ui_sellItem"),
-        inputAction = InputAction.MENU_ACCEPT,
+        inputAction = InputAction.MENU_CANCEL,
         callback = function()
             self:showSellSelected()
+        end
+    }
+    self.btnViewOnMap = {
+        text = g_i18n:getText("button_viewOnMap"),
+        inputAction = InputAction.MENU_ACTIVATE,
+        callback = function()
+            self:onVehicleViewOnMap()
+        end
+    }
+    self.btnEnterVehicle = {
+        text = g_i18n:getText("button_enterVehicle"),
+        inputAction = InputAction.MENU_ACCEPT,
+        callback = function()
+            self:onTryEnterVehicle()
         end
     }
     self:setMenuButtonInfo({
         self.btnBack,
         self.btnNextPage,
         self.btnPreviousPage,
+        self.btnViewOnMap,
+        self.btnEnterVehicle,
         self.btnSellOrReturn
     })
 
@@ -157,6 +173,13 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
         self.elementCache[k] = nil
     end
 
+    if vehicle.getIsEnterableFromMenu == nil or not vehicle:getIsEnterableFromMenu() then
+        self.btnEnterVehicle.disabled = true
+    else
+        self.btnEnterVehicle.disabled = false
+    end
+    self:setMenuButtonInfoDirty()
+
     local item = g_storeManager:getItemByXMLFilename(vehicle.configFileName)
     local displayItem = g_shopController:makeDisplayItem(item, vehicle, vehicle.configurations)
 
@@ -233,7 +256,7 @@ function ItemsFrame:updateFillTypes(template, fillTypes, slice)
 end
 
 function ItemsFrame:showSellSelected()
-    local item = self.items[self.itemsList.selectedIndex]
+    local vehicle = self.items[self.itemsList.selectedIndex]
 
     local label = nil
     if self.propertyState == VehiclePropertyState.OWNED then
@@ -245,7 +268,7 @@ function ItemsFrame:showSellSelected()
     YesNoDialog.show(
         function(self, clickOk)
             if clickOk then
-                g_client:getServerConnection():sendEvent(SellVehicleEvent.new(item, 1, true))
+                g_client:getServerConnection():sendEvent(SellVehicleEvent.new(vehicle, 1, true))
                 if self.propertyState == VehiclePropertyState.OWNED then
                     InfoDialog.show(g_i18n:getText("shop_messageSoldVehicle"))
                 else
@@ -256,4 +279,22 @@ function ItemsFrame:showSellSelected()
             end
         end, self,
         label)
+end
+
+function ItemsFrame:onVehicleViewOnMap()
+    local vehicle = self.items[self.itemsList.selectedIndex]
+    local garagePage = g_currentMission.garageMenu.garagePage
+    g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(garagePage))
+    g_inGameMenu:openMapOverview()
+    g_inGameMenu.pageMapOverview:showMapHotspot(vehicle:getMapHotspot())
+end
+
+function ItemsFrame:onTryEnterVehicle()
+    local vehicle = self.items[self.itemsList.selectedIndex]
+    if vehicle ~= nil and (vehicle.getIsEnterableFromMenu ~= nil and vehicle:getIsEnterableFromMenu()) then
+        local garagePage = g_currentMission.garageMenu.garagePage
+        g_shopMenu.pagingElement:setPage(g_shopMenu.pagingElement:getPageMappingIndexByElement(garagePage))
+        g_gui:showGui("")
+        g_localPlayer:requestToEnterVehicle(vehicle)
+    end
 end
