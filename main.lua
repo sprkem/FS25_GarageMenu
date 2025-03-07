@@ -27,6 +27,7 @@ function GarageMenu:loadMap()
     g_shopMenu.pagingElement:addElement(self.garageItemsPage)
     self.garageItemsPage:initialize()
 
+
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
         GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), "pageUsedSale")
 

@@ -9,6 +9,7 @@ function MenuGarageMenu.new()
     self.itemCache = {}
     self.categories = nil
     self.categoryTypes = nil
+    self.propertyState = VehiclePropertyState.OWNED
 
     self.btnBack = {
         inputAction = InputAction.MENU_BACK
@@ -116,19 +117,23 @@ end
 
 function MenuGarageMenu:initialize()
     self.categoryHeaderText:setText(g_i18n:getText("shop_ownedItems"))
+    g_messageCenter:subscribe(MessageType.GUI_AFTER_CLOSE, self.resetView, self)
+end
+
+function MenuGarageMenu:resetView()
+    self.propertyState = VehiclePropertyState.OWNED
 end
 
 function MenuGarageMenu:onFrameOpen()
     MenuGarageMenu:superClass().onFrameOpen(self)
     g_messageCenter:subscribe(SellVehicleEvent, self.updateContent, self)
     self:setMenuButtonInfoDirty()
-    self.propertyState = VehiclePropertyState.OWNED
     self:updateContent()
 end
 
 function MenuGarageMenu:onFrameClose()
     MenuGarageMenu:superClass().onFrameClose(self)
-    g_messageCenter:unsubscribeAll(self)
+    g_messageCenter:unsubscribe(SellVehicleEvent, self)
 end
 
 function MenuGarageMenu:toggleView()
@@ -176,7 +181,7 @@ function MenuGarageMenu:updateContent()
             local categoryIndex = mapEntry.sortValue + 1
             if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
                 dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                    categoryName = storeItem.categoryName,                    
+                    categoryName = storeItem.categoryName,
                     label = mapEntry.label,
                     imageFilename = storeItem.imageFilename
                 }
