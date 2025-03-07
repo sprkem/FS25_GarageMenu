@@ -150,7 +150,14 @@ function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
     cell:getAttribute("icon"):setImageFilename(storeItem.imageFilename)
     cell:getAttribute("brandIcon"):setImageFilename(item.brand.image)
     cell:getAttribute("title"):setText(item:getName())
-    cell:getAttribute("value"):setText(g_i18n:formatMoney(item:getSellPrice(), 0, 0, true))
+
+    local displayPrice = item:getSellPrice()
+    if item.propertyState == VehiclePropertyState.LEASED then
+        displayPrice = item.price *
+        (EconomyManager.DEFAULT_RUNNING_LEASING_FACTOR + EconomyManager.PER_DAY_LEASING_FACTOR)
+    end
+
+    cell:getAttribute("value"):setText(g_i18n:formatMoney(displayPrice, 0, 0, true))
 end
 
 function ItemsFrame:onListSelectionChanged(list, section, index)
