@@ -112,13 +112,14 @@ function ItemsFrame:onFrameClose()
     ItemsFrame:superClass().onFrameClose(self)
 end
 
-function ItemsFrame:setContent(items, categoryDisplayName, propertyState)
+function ItemsFrame:setContent(items, categoryName, categoryDisplayName, propertyState)
     self.items = items
     if self.items == nil then
         return
     end
 
     self.propertyState = propertyState
+    self.categoryItems = g_shopController:getItemsByCategory(categoryName)
     self.categoryDisplayName = categoryDisplayName
     self.itemsHeaderText:setText(categoryDisplayName)
 
@@ -146,26 +147,85 @@ end
 function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
     local item = self.items[index]
     local menuPage = g_currentMission.garageMenu.garagePage
-    local storeItem = menuPage.itemCache[item.xmlFile.filename]
-    cell:getAttribute("icon"):setImageFilename(storeItem.imageFilename)
-    cell:getAttribute("brandIcon"):setImageFilename(item.brand.image)
-    cell:getAttribute("title"):setText(item:getName())
 
-    local displayPrice = item:getSellPrice()
-    if item.propertyState == VehiclePropertyState.LEASED then
-        displayPrice = item.price *
-        (EconomyManager.DEFAULT_RUNNING_LEASING_FACTOR + EconomyManager.PER_DAY_LEASING_FACTOR)
+    local xmlFilename = self:getItemXMLFileName(item)
+    local storeItem = menuPage.itemCache[xmlFilename]
+
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        storeItem = self:getUsedVehicleStoreItem(xmlFilename)
     end
 
-    cell:getAttribute("value"):setText(g_i18n:formatMoney(displayPrice, 0, 0, true))
+    cell:getAttribute("icon"):setImageFilename(storeItem.imageFilename)
+    cell:getAttribute("title"):setText(self:getItemName(item, storeItem))
+    cell:getAttribute("brandIcon"):setImageFilename(self:getBrandIconFilename(item, storeItem))
+
+    local valueText = ""
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        valueText = item.ttl
+    elseif item.propertyState == VehiclePropertyState.OWNED then
+        valueText = item:getSellPrice()
+    elseif item.propertyState == VehiclePropertyState.LEASED then
+        valueText = item.price *
+            (EconomyManager.DEFAULT_RUNNING_LEASING_FACTOR + EconomyManager.PER_DAY_LEASING_FACTOR)
+    end
+
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        cell:getAttribute("value"):setText(valueText)
+    else
+        cell:getAttribute("value"):setText(g_i18n:formatMoney(valueText, 0, 0, true))
+    end
+end
+
+function ItemsFrame:getUsedVehicleStoreItem(xmlFilename)
+    for _, categoryItem in pairs(self.categoryItems) do
+        if categoryItem.storeItem.xmlFilename == xmlFilename then
+            return categoryItem.storeItem
+        end
+    end
+end
+
+function ItemsFrame:getUsedVehicleCategoryItem(xmlFilename)
+    for _, categoryItem in pairs(self.categoryItems) do
+        if categoryItem.storeItem.xmlFilename == xmlFilename then
+            return categoryItem
+        end
+    end
+end
+
+function ItemsFrame:getBrandIconFilename(item, storeItem)
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        local brand = g_brandManager:getBrandByIndex(storeItem.brandIndex)
+        return brand.image
+    end
+    return item.brand.image
+end
+
+function ItemsFrame:getItemXMLFileName(item)
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        return item.filename
+    end
+    return item.xmlFile.filename
+end
+
+function ItemsFrame:getItemName(item, storeItem)
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        return storeItem.name
+    end
+    return item:getFullName()
 end
 
 function ItemsFrame:onListSelectionChanged(list, section, index)
     local menuPage = g_currentMission.garageMenu.garagePage
     local vehicle = self.items[index]
-    local storeItem = menuPage.itemCache[vehicle.xmlFile.filename]
+
+    local xmlFilename = self:getItemXMLFileName(vehicle)
+    local storeItem = menuPage.itemCache[xmlFilename]
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        storeItem = self:getUsedVehicleStoreItem(xmlFilename)
+    end
+
     self.itemDetailsImage:setImageFilename(storeItem.imageFilename)
-    self.itemDetailsName:setText(vehicle:getFullName())
+    self.itemDetailsName:setText(self:getItemName(vehicle, storeItem))
 
     for k, element in pairs(self.elementCache) do
         element:setVisible(false)
@@ -187,8 +247,13 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
     end
     self:setMenuButtonInfoDirty()
 
-    local item = g_storeManager:getItemByXMLFilename(vehicle.configFileName)
-    local displayItem = g_shopController:makeDisplayItem(item, vehicle, vehicle.configurations)
+    local displayItem = nil
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        displayItem = self:getUsedVehicleCategoryItem(xmlFilename)
+    else
+        local item = g_storeManager:getItemByXMLFilename(vehicle.configFileName)
+        displayItem = g_shopController:makeDisplayItem(item, vehicle, vehicle.configurations)
+    end
 
     self:displayAttributes(displayItem)
     local fillTypes = FillUnit.getSpecValueFillTypes(storeItem, vehicle)
@@ -199,8 +264,14 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
 
     self.attributesLayout:invalidateLayout()
 
-    local x, _, z = getTranslation(vehicle.rootNode)
-    self.itemDetailsMap:setCenterToWorldPosition(x, z)
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        local storePlace = g_currentMission.storeSpawnPlaces[1];
+        self.itemDetailsMap:setCenterToWorldPosition(storePlace.startX, storePlace.startZ)
+    else        
+        local x, _, z = getTranslation(vehicle.rootNode)
+        self.itemDetailsMap:setCenterToWorldPosition(x, z)
+    end
+
     self.itemDetailsMap:setMapZoom(7)
     self.itemDetailsMap:setMapAlpha(1)
 end
