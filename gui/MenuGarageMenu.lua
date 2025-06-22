@@ -161,7 +161,7 @@ function MenuGarageMenu:updateContent()
     elseif self.propertyState == VehiclePropertyState.LEASED then
         self.categoryHeaderText:setText(g_i18n:getText("shop_leasedItems"))
     elseif self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
-        self.categoryHeaderText:setText("TODO: Used Equipment Requests")
+        self.categoryHeaderText:setText(g_i18n:getText("garage_used_equipment_title"))
     end
 
     if self.sectionData == nil then

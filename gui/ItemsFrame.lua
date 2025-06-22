@@ -123,6 +123,16 @@ function ItemsFrame:setContent(items, categoryName, categoryDisplayName, propert
     self.categoryDisplayName = categoryDisplayName
     self.itemsHeaderText:setText(categoryDisplayName)
 
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        self.btnSellOrReturn.disabled = true
+        self.btnViewOnMap.disabled = true
+        self.btnEnterVehicle.disabled = true
+    else
+        self.btnSellOrReturn.disabled = false
+        self.btnViewOnMap.disabled = false
+        self.btnEnterVehicle.disabled = false
+    end
+
     if self.propertyState == VehiclePropertyState.OWNED then
         self.btnSellOrReturn.text = g_i18n:getText("ui_sellItem")
     else
@@ -161,7 +171,7 @@ function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
 
     local valueText = ""
     if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
-        valueText = item.ttl
+        valueText = tostring(math.floor(item.ttl / 24) + 1)
     elseif item.propertyState == VehiclePropertyState.OWNED then
         valueText = item:getSellPrice()
     elseif item.propertyState == VehiclePropertyState.LEASED then
@@ -170,7 +180,7 @@ function ItemsFrame:populateCellForItemInSection(list, section, index, cell)
     end
 
     if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
-        cell:getAttribute("value"):setText(valueText)
+        cell:getAttribute("value"):setText(string.format(g_i18n:getText("garage_used_equipment_ttl_format"), valueText))
     else
         cell:getAttribute("value"):setText(g_i18n:formatMoney(valueText, 0, 0, true))
     end
@@ -240,17 +250,17 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
         self.elementCache[k] = nil
     end
 
-    if vehicle.getIsEnterableFromMenu == nil or not vehicle:getIsEnterableFromMenu() then
-        self.btnEnterVehicle.disabled = true
-    else
-        self.btnEnterVehicle.disabled = false
-    end
-    self:setMenuButtonInfoDirty()
-
     local displayItem = nil
     if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
         displayItem = self:getUsedVehicleCategoryItem(xmlFilename)
     else
+        if vehicle.getIsEnterableFromMenu == nil or not vehicle:getIsEnterableFromMenu() then
+            self.btnEnterVehicle.disabled = true
+        else
+            self.btnEnterVehicle.disabled = false
+        end
+        self:setMenuButtonInfoDirty()
+
         local item = g_storeManager:getItemByXMLFilename(vehicle.configFileName)
         displayItem = g_shopController:makeDisplayItem(item, vehicle, vehicle.configurations)
     end
@@ -265,9 +275,9 @@ function ItemsFrame:onListSelectionChanged(list, section, index)
     self.attributesLayout:invalidateLayout()
 
     if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
-        local storePlace = g_currentMission.storeSpawnPlaces[1];
+        local storePlace = g_currentMission.storeSpawnPlaces[1]
         self.itemDetailsMap:setCenterToWorldPosition(storePlace.startX, storePlace.startZ)
-    else        
+    else
         local x, _, z = getTranslation(vehicle.rootNode)
         self.itemDetailsMap:setCenterToWorldPosition(x, z)
     end
@@ -334,6 +344,10 @@ function ItemsFrame:updateFillTypes(template, fillTypes, slice)
 end
 
 function ItemsFrame:showSellSelected()
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        return
+    end
+
     local vehicle = self.items[self.itemsList.selectedIndex]
 
     local label = nil

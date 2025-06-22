@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="96">
     <author>Ozz</author>
-    <version>1.0.0.0</version>
+    <version>1.0.0.1</version>
     <iconFilename>icon_garageMenu.dds</iconFilename>
     <title>
         <en>Garage Menu</en>
@@ -11,15 +11,31 @@
 
 A simple menu to view your owned and leased vehicles, similar to that seen in FS22.
 
+Changelog:
+
+1.0.0.1:
+- If using the mod Buy Used Equipment, you can now see currently running searches in the garage menu.
+
 ]]></en>		
     <de><![CDATA[Garage Menu
 
 Ein einfacher Menü, um Ihre von Ihnen besitzten und gepachteten Fahrzeuge zu betrachten, ähnlich wie in früheren Spielen.
 
+Änderungsliste:
+
+1.0.0.1:
+- Wenn Sie den Mod „Gebrauchte Ausrüstung kaufen“ verwenden, können Sie jetzt aktuell laufende Suchvorgänge im Garagenmenü sehen.
+
+
 ]]></de>	
     <fr><![CDATA[Garage Menu
 
 Un menu simple pour afficher vos véhicules propriétaires et locatifs, similaire à celui vu dans les jeux précédents.
+
+Journal des modifications:
+
+1.0.0.1:
+- Si vous utilisez le mod Acheter du matériel d'occasion, vous pouvez désormais voir les recherches en cours dans le menu du garage.
 
 ]]></fr>	
     </description>
@@ -27,4 +43,5 @@ Un menu simple pour afficher vos véhicules propriétaires et locatifs, similair
         <sourceFile filename="main.lua"/>
     </extraSourceFiles>
     <multiplayer supported="true"/>
+    <l10n filenamePrefix="languages/l10n" />
 </modDesc>
