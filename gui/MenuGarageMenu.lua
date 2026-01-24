@@ -171,21 +171,24 @@ function MenuGarageMenu:updateContent()
             local storeItem = self.itemCache[xmlFileName]
             local mapEntry = self.categoryData[storeItem.categoryName]
 
-            if dataByCategory[mapEntry.sectionID] == nil then
-                dataByCategory[mapEntry.sectionID] = {
-                    id = mapEntry.sectionID,
-                    categories = {}
-                }
+            if mapEntry ~= nil then
+                if dataByCategory[mapEntry.sectionID] == nil then
+                    dataByCategory[mapEntry.sectionID] = {
+                        id = mapEntry.sectionID,
+                        categories = {}
+                    }
+                end
+    
+                local categoryIndex = mapEntry.sortValue + 1
+                if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+                    dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
+                        categoryName = storeItem.categoryName,
+                        label = mapEntry.label,
+                        imageFilename = storeItem.imageFilename
+                    }
+                end
             end
 
-            local categoryIndex = mapEntry.sortValue + 1
-            if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
-                dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                    categoryName = storeItem.categoryName,
-                    label = mapEntry.label,
-                    imageFilename = storeItem.imageFilename
-                }
-            end
         end
     end
 
