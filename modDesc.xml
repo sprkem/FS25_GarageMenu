@@ -52,4 +52,5 @@ Journal des modifications:
         <sourceFile filename="main.lua"/>
     </extraSourceFiles>
     <multiplayer supported="true"/>
+    <l10n filenamePrefix="languages/l10n" />
 </modDesc>

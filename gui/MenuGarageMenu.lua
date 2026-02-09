@@ -1,6 +1,10 @@
 MenuGarageMenu = {}
 MenuGarageMenu._mt = Class(MenuGarageMenu, TabbedMenuFrameElement)
 
+MenuGarageMenu.CUSTOM_VIEW_MODE = {
+    BUY_USED_EQUIPMENT = 0
+}
+
 function MenuGarageMenu.new()
     local self = MenuGarageMenu:superClass().new(nil, MenuGarageMenu._mt)
     self.name = "menuGarageMenu"
@@ -139,6 +143,12 @@ end
 function MenuGarageMenu:toggleView()
     if self.propertyState == VehiclePropertyState.OWNED then
         self.propertyState = VehiclePropertyState.LEASED
+    elseif self.propertyState == VehiclePropertyState.LEASED then
+        if g_currentMission.garageMenu.isBuyUsedEquipmentEnabled then
+            self.propertyState = MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT
+        else
+            self.propertyState = VehiclePropertyState.OWNED
+        end
     else
         self.propertyState = VehiclePropertyState.OWNED
     end
@@ -148,8 +158,10 @@ end
 function MenuGarageMenu:updateContent()
     if self.propertyState == VehiclePropertyState.OWNED then
         self.categoryHeaderText:setText(g_i18n:getText("shop_ownedItems"))
-    else
+    elseif self.propertyState == VehiclePropertyState.LEASED then
         self.categoryHeaderText:setText(g_i18n:getText("shop_leasedItems"))
+    elseif self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        self.categoryHeaderText:setText(g_i18n:getText("garage_used_equipment_title"))
     end
 
     if self.sectionData == nil then
@@ -160,40 +172,11 @@ function MenuGarageMenu:updateContent()
         self:setCategoryData()
     end
 
-    local currentFarmId = self:getCurrentFarmId()
-    local dataByCategory = {}
 
-    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
-        if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
-            local xmlFileName = vehicle.xmlFile.filename
-            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
-
-            local storeItem = self.itemCache[xmlFileName]
-            local mapEntry = self.categoryData[storeItem.categoryName]
-
-            if mapEntry ~= nil then
-                if dataByCategory[mapEntry.sectionID] == nil then
-                    dataByCategory[mapEntry.sectionID] = {
-                        id = mapEntry.sectionID,
-                        categories = {}
-                    }
-                end
-    
-                local categoryIndex = mapEntry.sortValue + 1
-                if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
-                    dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                        categoryName = storeItem.categoryName,
-                        label = mapEntry.label,
-                        imageFilename = storeItem.imageFilename
-                    }
-                end
-            end
-
-        end
-    end
+    local dataByCategory = self:getCategorisedItems()
 
     self.renderData = {}
-    for index, detail in pairs(g_shopMenu.pageShopVehicles.categoryTypes) do
+    for _, detail in pairs(g_shopMenu.pageShopVehicles.categoryTypes) do
         if detail.name ~= "OBJECTS" then
             if dataByCategory[detail.name] ~= nil then
                 local toInsert = {
@@ -243,13 +226,79 @@ function MenuGarageMenu:populateCellForItemInSection(list, section, index, cell)
     cell:getAttribute("title"):setText(categoryInfo.label)
 end
 
+function MenuGarageMenu:getCategorisedItems()
+    local currentFarmId = self:getCurrentFarmId()
+    if self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        return self:getUsedEquipmentItems(currentFarmId)
+    end
+
+    local dataByCategory = {}
+    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
+        if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
+            local xmlFileName = vehicle.xmlFile.filename
+            if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+
+            local storeItem = self.itemCache[xmlFileName]
+            local mapEntry = self.categoryData[storeItem.categoryName]
+
+            if dataByCategory[mapEntry.sectionID] == nil then
+                dataByCategory[mapEntry.sectionID] = {
+                    id = mapEntry.sectionID,
+                    categories = {}
+                }
+            end
+
+            local categoryIndex = mapEntry.sortValue + 1
+            if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+                dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
+                    categoryName = storeItem.categoryName,
+                    label = mapEntry.label,
+                    imageFilename = storeItem.imageFilename
+                }
+            end
+        end
+    end
+    return dataByCategory
+end
+
+function MenuGarageMenu:getUsedEquipmentItems(farmId)
+    local farm = g_farmManager:getFarmById(farmId)
+    local usedEquipmentRequests = farm.buyUsedVehicles
+    local dataByCategory = {}
+    for _, request in pairs(usedEquipmentRequests) do
+        local xmlFileName = request.filename
+        if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+        local storeItem = self.itemCache[xmlFileName]
+        local mapEntry = self.categoryData[storeItem.categoryName]
+
+        if dataByCategory[mapEntry.sectionID] == nil then
+            dataByCategory[mapEntry.sectionID] = {
+                id = mapEntry.sectionID,
+                categories = {}
+            }
+        end
+
+        local categoryIndex = mapEntry.sortValue + 1
+        if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+            dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
+                categoryName = storeItem.categoryName,
+                label = mapEntry.label,
+                imageFilename = storeItem.imageFilename
+            }
+        end
+    end
+
+    return dataByCategory
+end
+
 function MenuGarageMenu:onOpenCategory(_, _, _, _)
     local section = self.renderData[self.categoryList.selectedSectionIndex]
     local index = self.categoryList.selectedIndex
     local itemsPage = g_currentMission.garageMenu.garageItemsPage
     if section ~= nil and section.categories[index] ~= nil then
+        local category  = section.categories[index]
         local categoryName = section.categories[index].categoryName
-        itemsPage:setContent(self:getItemsForCategory(categoryName), section.categories[index].label, self.propertyState)
+        itemsPage:setContent(self:getItemsForCategory(categoryName), category.categoryName, category.label, self.propertyState)
         g_shopMenu:pushDetail(itemsPage)
     end
 end
@@ -257,13 +306,26 @@ end
 function MenuGarageMenu:getItemsForCategory(categoryName)
     local currentFarmId = self:getCurrentFarmId()
     local items = {}
-    for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
-        if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
-            local xmlFileName = vehicle.xmlFile.filename
+    if self.propertyState == VehiclePropertyState.OWNED or self.propertyState == VehiclePropertyState.LEASED then
+        for _, vehicle in pairs(g_currentMission.vehicleSystem.vehicles) do
+            if vehicle.ownerFarmId == currentFarmId and vehicle.propertyState == self.propertyState then
+                local xmlFileName = vehicle.xmlFile.filename
+                if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
+                local itemCacheEntry = self.itemCache[xmlFileName]
+                if itemCacheEntry.categoryName == categoryName then
+                    table.insert(items, vehicle)
+                end
+            end
+        end
+    elseif self.propertyState == MenuGarageMenu.CUSTOM_VIEW_MODE.BUY_USED_EQUIPMENT then
+        local farm = g_farmManager:getFarmById(currentFarmId)
+        local usedEquipmentRequests = farm.buyUsedVehicles
+        for _, request in pairs(usedEquipmentRequests) do
+            local xmlFileName = request.filename
             if self.itemCache[xmlFileName] == nil then self:storeItemDetails(xmlFileName) end
             local itemCacheEntry = self.itemCache[xmlFileName]
             if itemCacheEntry.categoryName == categoryName then
-                table.insert(items, vehicle)
+                table.insert(items, request)
             end
         end
     end

@@ -27,6 +27,7 @@ function GarageMenu:loadMap()
     g_shopMenu.pagingElement:addElement(self.garageItemsPage)
     self.garageItemsPage:initialize()
 
+    self.isBuyUsedEquipmentEnabled = false
 
     GarageMenu.addShopPage(self.garagePage, "menuGarageMenu", { 0, 0, 1024, 1024 },
         GarageMenu:makeIsGarageMenuCheckEnabledPredicate(), "pageUsedSale")
@@ -97,5 +98,11 @@ function GarageMenu.addShopPage(frame, pageName, uvs, predicateFunc, insertAfter
 
     g_shopMenu:rebuildTabList()
 end
+
+function GarageMenu:onStartMission()
+    if g_modIsLoaded["FS25_BuyUsedEquipment"] then g_currentMission.garageMenu.isBuyUsedEquipmentEnabled = true end
+end
+
+FSBaseMission.onStartMission = Utils.prependedFunction(FSBaseMission.onStartMission, GarageMenu.onStartMission)
 
 addModEventListener(GarageMenu)
