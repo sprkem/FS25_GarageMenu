@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="105">
+<modDesc descVersion="106">
     <author>Ozz</author>
-    <version>1.0.0.2</version>
+    <version>1.0.0.3</version>
     <iconFilename>icon_garageMenu.dds</iconFilename>
     <title>
         <en>Garage Menu</en>
@@ -11,7 +11,12 @@
 
 A simple menu to view your owned and leased vehicles, similar to that seen in FS22.
 
+GitHub: https://github.com/sprkem/FS25_GarageMenu
+
 Changelog:
+
+1.0.0.3:
+- Fix support for Buy Used Equipment.
 
 1.0.0.2:
 - Add safety guard to prevent issues with custom shop categories, specifically when using FS25_TakeSingleObjects.
@@ -24,7 +29,12 @@ Changelog:
 
 Ein einfacher Menü, um Ihre von Ihnen besitzten und gepachteten Fahrzeuge zu betrachten, ähnlich wie in früheren Spielen.
 
+GitHub: https://github.com/sprkem/FS25_GarageMenu
+
 Änderungsliste:
+
+1.0.0.3:
+- Behebung der Unterstützung für Gebrauchte Ausrüstung kaufen.
 
 1.0.0.2:
 - Sicherheitsvorkehrung hinzugefügt, um Probleme mit benutzerdefinierten Shop-Kategorien zu vermeiden, insbesondere bei Verwendung von FS25_TakeSingleObjects.
@@ -38,7 +48,12 @@ Ein einfacher Menü, um Ihre von Ihnen besitzten und gepachteten Fahrzeuge zu be
 
 Un menu simple pour afficher vos véhicules propriétaires et locatifs, similaire à celui vu dans les jeux précédents.
 
+GitHub: https://github.com/sprkem/FS25_GarageMenu
+
 Journal des modifications:
+
+1.0.0.3:
+- Correction de la prise en charge de l'achat d'équipement d'occasion.
 
 1.0.0.2:
 - Ajouter une protection pour éviter les problèmes liés aux catégories de boutiques personnalisées, notamment lors de l'utilisation de FS25_TakeSingleObjects.
