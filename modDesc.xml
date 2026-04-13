@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="106">
+<modDesc descVersion="107">
     <author>Ozz</author>
-    <version>1.0.0.3</version>
+    <version>1.0.0.4</version>
     <iconFilename>icon_garageMenu.dds</iconFilename>
     <title>
         <en>Garage Menu</en>
@@ -14,6 +14,10 @@ A simple menu to view your owned and leased vehicles, similar to that seen in FS
 GitHub: https://github.com/sprkem/FS25_GarageMenu
 
 Changelog:
+
+1.0.0.4:
+- Add additional guard to prevent issues with specific mod items.
+- Fix back/next menu buttons not working when clicked.
 
 1.0.0.3:
 - Fix support for Buy Used Equipment.
@@ -33,6 +37,10 @@ GitHub: https://github.com/sprkem/FS25_GarageMenu
 
 Änderungsliste:
 
+1.0.0.4:
+- Zusätzliche Sicherheitsvorkehrung hinzugefügt, um Probleme mit bestimmten Mod-Gegenständen zu vermeiden.
+- Behebung der Zurück-/Weiter-Menüschaltflächen, die beim Klicken nicht funktionierten.
+
 1.0.0.3:
 - Behebung der Unterstützung für Gebrauchte Ausrüstung kaufen.
 
@@ -51,6 +59,10 @@ Un menu simple pour afficher vos véhicules propriétaires et locatifs, similair
 GitHub: https://github.com/sprkem/FS25_GarageMenu
 
 Journal des modifications:
+
+1.0.0.4:
+- Ajout d'une protection supplémentaire pour éviter les problèmes avec certains objets de mods.
+- Correction des boutons de menu retour/suivant qui ne fonctionnaient pas lorsqu'ils étaient cliqués.
 
 1.0.0.3:
 - Correction de la prise en charge de l'achat d'équipement d'occasion.

@@ -15,17 +15,6 @@ function MenuGarageMenu.new()
     self.categoryTypes = nil
     self.propertyState = VehiclePropertyState.OWNED
 
-    self.btnBack = {
-        inputAction = InputAction.MENU_BACK
-    }
-    self.btnPreviousPage = {
-        text = g_i18n:getText("ui_ingameMenuPrev"),
-        inputAction = InputAction.MENU_PAGE_PREV
-    }
-    self.btnNextPage = {
-        text = g_i18n:getText("ui_ingameMenuNext"),
-        inputAction = InputAction.MENU_PAGE_NEXT
-    }
     self.btnToggleView = {
         text = g_i18n:getText("ui_switchMode"),
         inputAction = InputAction.MENU_EXTRA_1,
@@ -40,15 +29,18 @@ function MenuGarageMenu.new()
             self:onOpenCategory()
         end
     }
+
+    return self
+end
+
+function MenuGarageMenu:onFrameOpenSetButtonInfo()
     self:setMenuButtonInfo({
-        self.btnBack,
-        self.btnNextPage,
-        self.btnPreviousPage,
+        g_shopMenu.backButtonInfo,
+        g_shopMenu.nextPageButtonInfo,
+        g_shopMenu.prevPageButtonInfo,
         self.btnSelectCategory,
         self.btnToggleView
     })
-
-    return self
 end
 
 function MenuGarageMenu:setSectionData()
@@ -131,6 +123,7 @@ end
 function MenuGarageMenu:onFrameOpen()
     MenuGarageMenu:superClass().onFrameOpen(self)
     g_messageCenter:subscribe(SellVehicleEvent, self.updateContent, self)
+    self:onFrameOpenSetButtonInfo()
     self:setMenuButtonInfoDirty()
     self:updateContent()
 end
@@ -241,20 +234,22 @@ function MenuGarageMenu:getCategorisedItems()
             local storeItem = self.itemCache[xmlFileName]
             local mapEntry = self.categoryData[storeItem.categoryName]
 
-            if dataByCategory[mapEntry.sectionID] == nil then
-                dataByCategory[mapEntry.sectionID] = {
-                    id = mapEntry.sectionID,
-                    categories = {}
-                }
-            end
+            if mapEntry ~= nil then
+                if dataByCategory[mapEntry.sectionID] == nil then
+                    dataByCategory[mapEntry.sectionID] = {
+                        id = mapEntry.sectionID,
+                        categories = {}
+                    }
+                end
 
-            local categoryIndex = mapEntry.sortValue + 1
-            if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
-                dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                    categoryName = storeItem.categoryName,
-                    label = mapEntry.label,
-                    imageFilename = storeItem.imageFilename
-                }
+                local categoryIndex = mapEntry.sortValue + 1
+                if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+                    dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
+                        categoryName = storeItem.categoryName,
+                        label = mapEntry.label,
+                        imageFilename = storeItem.imageFilename
+                    }
+                end
             end
         end
     end
@@ -271,20 +266,22 @@ function MenuGarageMenu:getUsedEquipmentItems(farmId)
         local storeItem = self.itemCache[xmlFileName]
         local mapEntry = self.categoryData[storeItem.categoryName]
 
-        if dataByCategory[mapEntry.sectionID] == nil then
-            dataByCategory[mapEntry.sectionID] = {
-                id = mapEntry.sectionID,
-                categories = {}
-            }
-        end
+        if mapEntry ~= nil then
+            if dataByCategory[mapEntry.sectionID] == nil then
+                dataByCategory[mapEntry.sectionID] = {
+                    id = mapEntry.sectionID,
+                    categories = {}
+                }
+            end
 
-        local categoryIndex = mapEntry.sortValue + 1
-        if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
-            dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
-                categoryName = storeItem.categoryName,
-                label = mapEntry.label,
-                imageFilename = storeItem.imageFilename
-            }
+            local categoryIndex = mapEntry.sortValue + 1
+            if dataByCategory[mapEntry.sectionID].categories[categoryIndex] == nil then
+                dataByCategory[mapEntry.sectionID].categories[categoryIndex] = {
+                    categoryName = storeItem.categoryName,
+                    label = mapEntry.label,
+                    imageFilename = storeItem.imageFilename
+                }
+            end
         end
     end
 
