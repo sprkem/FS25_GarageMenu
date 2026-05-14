@@ -1,5 +1,5 @@
 # Garage Menu
 
-A mod for Farming Simulator 25.
+A mod for Farming Simulator 25 to show your owned and leased vehicles.
 
-Find the mod on modhub [here](https://www.farming-simulator.com/mod.php?mod_id=316411&title=fs2025)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M41K5NPV)
